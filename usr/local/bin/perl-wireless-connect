@@ -5,20 +5,34 @@ use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 use constant WIRELESS_INTERFACE => 'wlan0';
 my $SCAN_COMMAND = "iwlist " . WIRELESS_INTERFACE . " scanning";
 my ( %cell, %HoC, $mac, $security_type );
-open my $fh, "<", WIRELESS_FILE;
-while (<$fh>) {
-  chomp;
-  my ( $mac, $essid, $key, $security_type ) = split /,/;
-}
 
 my @scan = `$SCAN_COMMAND`;
-&form_hash(@scan);
-print %HoC;
 
-sub form_hash {
+my ( %known_macs, %known_essids ) = &known_networks();
+
+foreach my $mac ( keys %known_macs ) {
+    print "==> $mac $known_macs{$mac}{essid}\n";
+}
+
+sub known_networks {
+    my %HoN;
+    open my $fh, "<", WIRELESS_FILE;
+    while (<$fh>) {
+	chomp;
+	my ( $mac, $essid, $key, $security_type ) = split /,/;
+	$HoN{$mac}{essid} = $essid;
+	print "DEBUG: $mac $essid $key\n";
+	$HoN{$mac}{key} = $key;
+    }
+    return ( %HoN, %HoN );
+}
+
+%HoC = &available_networks(@scan);
+
+sub available_networks {
   my @scan = @_;
+  my %HoC;
   foreach (@scan) {
-    print "."; sleep 1;
     if ( m/^\s+Cell\s+\d+\s+-*\s*Address:\s*(([0-9a-fA-F]{2}[:-]{1}){5}([0-9a-fA-F]{2}))/ ) {
       $mac = $1;
       %cell = ( mac  => $mac );
@@ -38,7 +52,9 @@ sub form_hash {
       $HoC{$mac}{security} = $security_type;
     }
   }
+  return %HoC;
 }    
+print `date`;
 __END__
 
 
