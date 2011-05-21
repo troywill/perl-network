@@ -4,14 +4,18 @@ use strict;
 use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 use constant WIRELESS_INTERFACE => 'wlan0';
 my $SCAN_COMMAND = "iwlist " . WIRELESS_INTERFACE . " scanning";
-my ( %cell, %HoC, $mac, $security_type );
-
 my @scan = `$SCAN_COMMAND`;
 
 my ( %known_macs, %known_essids ) = &known_networks();
+my %available_macs = &available_networks(@scan);
 
 foreach my $mac ( keys %known_macs ) {
     print "==> $mac $known_macs{$mac}{essid}\n";
+    print "Check $mac to see if it is in 'available_macs' hash ...\n";
+    if ( $available_macs{$mac} ) {
+	print "DEBUG\n";
+	print "$available_macs{$mac}{essid} FOUND\n";
+    }
 }
 
 sub known_networks {
@@ -27,22 +31,20 @@ sub known_networks {
     return ( %HoN, %HoN );
 }
 
-%HoC = &available_networks(@scan);
-
 sub available_networks {
   my @scan = @_;
-  my %HoC;
+  my ( %cell, %HoC, $mac, $security_type );
   foreach (@scan) {
     if ( m/^\s+Cell\s+\d+\s+-*\s*Address:\s*(([0-9a-fA-F]{2}[:-]{1}){5}([0-9a-fA-F]{2}))/ ) {
       $mac = $1;
       %cell = ( mac  => $mac );
       $security_type = '';
     } elsif (m/^\s*ESSID:*\"(.*?)\"/ ) {
-      $HoC{$mac}{ESSID} = $1;
+      $HoC{$mac}{essid} = $1;
     } elsif ( m/^\s*Quality=(\d+)\/(\d+)\s*/ ) {
-      $HoC{$mac}{Quality} = $1;
+      $HoC{$mac}{quality} = $1;
     } elsif ( m/^\s*Encryption key:(.*?)$/ ) {
-      $HoC{$mac}{Encryption} = $1;
+      $HoC{$mac}{encryption} = $1;
       # security type
     } elsif ( m/IEEE 802.11i\/WPA2 Version 1/ ) {
       $security_type .= "[WPA2]";
