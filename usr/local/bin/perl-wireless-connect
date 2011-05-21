@@ -4,19 +4,19 @@ use strict;
 use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 use constant WIRELESS_INTERFACE => 'wlan0';
 my $SCAN_COMMAND = "iwlist " . WIRELESS_INTERFACE . " scanning";
-my @scan = `$SCAN_COMMAND`;
 
 my ( %known_macs, %known_essids ) = &known_networks();
-my %available_macs = &available_networks(@scan);
+print "Scanning for available networks...\n";
+my @network_scan = `$SCAN_COMMAND`;
+my %available_macs = &available_networks(@network_scan);
 
 foreach my $mac ( keys %known_macs ) {
-    print "==> $mac $known_macs{$mac}{essid}\n";
-    print "Check $mac to see if it is in 'available_macs' hash ...\n";
     if ( $available_macs{$mac} ) {
-	print "DEBUG\n";
-	print "$available_macs{$mac}{essid} FOUND\n";
+	print "=> Network '$available_macs{$mac}{essid}' found...\n";
     }
 }
+
+# Read mac, essid from file
 
 sub known_networks {
     my %HoN;
@@ -25,7 +25,6 @@ sub known_networks {
 	chomp;
 	my ( $mac, $essid, $key, $security_type ) = split /,/;
 	$HoN{$mac}{essid} = $essid;
-	print "DEBUG: $mac $essid $key\n";
 	$HoN{$mac}{key} = $key;
     }
     return ( %HoN, %HoN );
