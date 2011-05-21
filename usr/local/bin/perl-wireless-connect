@@ -13,11 +13,11 @@ my %available_macs = &available_networks(@network_scan);
 foreach my $mac ( keys %known_macs ) {
     if ( $available_macs{$mac} ) {
 	print "=> Network '$available_macs{$mac}{essid}' found...\n";
+	connect_to_network(
     }
 }
 
-# Read mac, essid from file
-
+x# Read mac, essid from file
 sub known_networks {
     my %HoN;
     open my $fh, "<", WIRELESS_FILE;
