@@ -1,0 +1,53 @@
+#!/usr/bin/env perl
+use warnings;
+use strict;
+use Net::Ping;
+
+use constant GOOGLE => '74.125.224.180';
+my $verbose = 1;
+
+
+&get_interface_state('eth0');
+&get_interface_state('wlan0');
+
+# "icmp", "udp", "tcp", "syn", "stream", or "external"
+# my $p = Net::Ping->new('icmp');
+my $p = Net::Ping->new('syn');
+my $result = $p->ping('74.125.224.180');
+print "=>$result<=\n";
+$p->close();
+
+$p = Net::Ping->new('syn');
+$result = $p->ping('74.125.224.180');
+print "=>$result<=\n";
+$p->close();
+
+$p = Net::Ping->new('syn');
+$result = $p->ping('microsoft.com');
+print "=>$result<=\n";
+$p->close();
+
+exit;
+
+sub get_interface_state {
+    my $device = shift;
+    my $operstate_file = "/sys/class/net/${device}/operstate";
+    my $carrier_file = "/sys/class/net/${device}/carrier";
+    my ($operstate, $carrier);
+    open(my $fh, "<", $operstate_file);
+    chomp($operstate = readline $fh);
+    close $fh;
+    open($fh, "<", $carrier_file);
+    if ( -r $carrier_file ) {
+	$carrier = readline $fh;
+	if ( defined $carrier ) {
+	    
+	} else {
+	    $carrier = -1;
+	}
+    }
+    close $fh;
+    print "$device: $operstate\n";
+    my $ip_show = `ip link show ${device}`;
+    return $operstate;
+}

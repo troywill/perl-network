@@ -1,0 +1,65 @@
+#!/usr/bin/env perl
+use warnings;
+use strict;
+my $verbose = 1;
+my $SLEEP = 1;
+
+&get_interface_state;
+
+open my $LOG, '>>', "$ENV{'HOME'}/log/marv.log" or warn "Unable to open log file: $!";
+print $LOG time, ' start at ', `date`, "\n";
+close $LOG;
+
+&wait_for_interface;
+&detect_wireless;
+&connect_to_wireless;
+&get_interface_state;
+&marv_menu;
+exit;
+
+sub wait_for_interface {
+    my ( $operstate, $carrier ) = &get_interface_state;
+    while (($carrier != 0) && ($carrier != 1)) {
+	system("sudo ip link set wlan0 up 2>/dev/null");
+	( $operstate, $carrier ) = &get_interface_state;
+    }
+    while (( $operstate ne 'up') && ($operstate ne 'down')) {
+	system("sudo ip link set wlan0 up 2>/dev/null");
+	( $operstate, $carrier ) = &get_interface_state;
+    }
+}
+
+sub get_interface_state {
+    chomp(my $operstate = `cat /sys/class/net/wlan0/operstate 2>/dev/null`);
+    chomp(my $carrier = `cat /sys/class/net/wlan0/carrier 2>/dev/null`);
+    $carrier = -1 if $carrier eq "";
+    print "operstate = $operstate, carrier = $carrier\n" if $verbose;
+    return ( $operstate, $carrier );
+}
+
+sub detect_wireless {
+    system("sudo pass1.pl");
+}
+
+sub connect_to_wireless {
+    system("sudo ip link set wlan0 up");
+    sleep $SLEEP;
+    # check for claremont and stanford
+    my @scanlines;
+    open(SCANNING, "sudo iwlist wlan0 scanning 2>&1 |")
+	|| die "can't fork: $!";
+    while (<SCANNING>) {
+	push @scanlines, $_;
+    }
+    close SCANNING || die "bad scan: $! $?";
+
+    foreach (@scanlines) {
+	if ( /Wayport_Access/ ) {
+	    sleep 1;
+	    system("sudo iwconfig wlan0 essid 'Wayport_Access'");
+	    system("sudo dhcpcd wlan0");
+	    last;
+	}
+    }
+    print "DEBUG L77: let's close SCANNING\n";
+}
