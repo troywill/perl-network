@@ -35,8 +35,10 @@ sub connect_to_network {
 sub connect_to_wep {
     my ($key, $essid) = @_;
     print "DEBUG: Do not connect if connected!!!!\n";
+    print "[$key][$essid]\n";
     system("/usr/sbin/iwconfig wlan0 key $key");
     system("/usr/sbin/iwconfig wlan0 essid $essid");
+    system("dhcpcd wlan0");
 }
 
 # Read mac, essid from file
