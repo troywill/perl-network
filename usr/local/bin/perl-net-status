@@ -6,13 +6,12 @@ use Net::Ping;
 use constant GOOGLE => '74.125.224.180';
 my $verbose = 1;
 
-
 &get_interface_state('eth0');
 &get_interface_state('wlan0');
 
 # "icmp", "udp", "tcp", "syn", "stream", or "external"
 # my $p = Net::Ping->new('icmp');
-my $p = Net::Ping->new('external');
+my $p = Net::Ping->new('icmp');
 my $result = $p->ping('74.125.224.180');
 print "=>$result<=\n";
 $p->close();
