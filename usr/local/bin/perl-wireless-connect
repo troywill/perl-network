@@ -6,6 +6,15 @@ use constant WIRELESS_INTERFACE => 'wlan0';
 my $WIRELESS_INTERFACE = 'wlan0';
 my $SUDO = &get_sudo('/usr/bin/sudo');
 my $SCAN_COMMAND = "${SUDO} iwlist ${WIRELESS_INTERFACE} scanning";
+&bring_up_wireless_interface ( $WIRELESS_INTERFACE );
+
+sub bring_up_wireless_interface {
+    my $interface = shift;
+    chomp(my $operstate = `cat /sys/class/net/wlan0/operstate`);
+    if ( $operstate eq 'down') {
+	system("$SUDO ip link set wlan0 up");
+    }
+}
 
 my ( %known_macs ) = &read_known_networks();
 print "=> Scanning for available networks ...\n";
@@ -40,9 +49,9 @@ sub connect_to_wep {
     my ($key, $essid) = @_;
     print "DEBUG: Do not connect if connected!!!!\n";
     print "[$key][$essid]\n";
-    system("/usr/sbin/iwconfig wlan0 key $key");
-    system("/usr/sbin/iwconfig wlan0 essid $essid");
-    system("dhcpcd wlan0");
+    system("$SUDO /usr/sbin/iwconfig wlan0 key $key");
+    system("$SUDO /usr/sbin/iwconfig wlan0 essid $essid");
+    system("$SUDO dhcpcd wlan0");
 }
 
 # Read mac, essid from file
