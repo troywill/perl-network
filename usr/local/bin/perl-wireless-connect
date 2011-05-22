@@ -5,38 +5,42 @@ use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 use constant WIRELESS_INTERFACE => 'wlan0';
 my $SCAN_COMMAND = "iwlist " . WIRELESS_INTERFACE . " scanning";
 
-my ( %known_macs, %known_essids ) = &known_networks();
-print "\n.... Scanning for available networks ...\n";
+my ( %known_macs ) = &read_known_networks();
+print "=> Scanning for available networks ...\n";
 my @network_scan = `$SCAN_COMMAND`;
 my %available_macs = &available_networks(@network_scan);
 
 foreach my $mac ( keys %known_macs ) {
   if ( $available_macs{$mac} ) {
     print "=> Network '$available_macs{$mac}{essid}' found...\n";
-    &connect_to_network( $mac, %available_macs );
+    &connect_to_network( $mac, \%known_macs, \%available_macs );
   }
 }
 
-sub connect_to_wep {
-    my ($key, $essid) = @_;
-    print "Do not connect if connected!!!!\n";
-#    system("/usr/sbin/iwconfig wlan0 key $key");
-#    system("/usr/sbin/iwconfig wlan0 essid $essid");
-}
-
 sub connect_to_network {
-  my ( $mac, %HoH ) = @_;
+  # %HoH is hash of available wireless cell hashes from external program ( iwlist scanning )
+  my ( $mac, $known_macs_ref, $HoH_ref ) = @_;
+  my %known_macs_ref = %{$known_macs_ref};
+  my %HoH = %{$HoH_ref};
   print "ESSID: $HoH{$mac}{essid}\n";
   print "ENCRYPTION: $HoH{$mac}{encryption}\n";
   print "QUALITY: $HoH{$mac}{quality}\n";
   print "SECURITY: $HoH{$mac}{security}\n";
   if ( $HoH{$mac}{security} eq 'WEP') {
-      &connect_to_wep( $HoH{$mac}{key}, $HoH{$mac}{essid} );
+      my $key = $known_macs{$mac}{key};
+      &connect_to_wep( $key, $HoH{$mac}{essid} );
   }
 }
 
+sub connect_to_wep {
+    my ($key, $essid) = @_;
+    print "DEBUG: Do not connect if connected!!!!\n";
+    system("/usr/sbin/iwconfig wlan0 key $key");
+    system("/usr/sbin/iwconfig wlan0 essid $essid");
+}
+
 # Read mac, essid from file
-sub known_networks {
+sub read_known_networks {
   my %HoN;
   open my $fh, "<", WIRELESS_FILE;
   while (<$fh>) {
@@ -45,7 +49,8 @@ sub known_networks {
     $HoN{$mac}{essid} = $essid;
     $HoN{$mac}{key} = $key;
   }
-  return ( %HoN, %HoN );
+  close $fh;
+  return ( %HoN );
 }
 
 sub available_networks {
