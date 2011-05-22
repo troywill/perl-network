@@ -5,7 +5,13 @@ use Net::Ping;
 
 use constant GOOGLE => '74.125.224.180';
 my $verbose = 1;
-
+my $SUDO = get_sudo();
+sub get_sudo {
+    foreach my $key ( keys %ENV ) {
+	print "$key: $ENV{$key}\n";
+    }
+    exit;
+}
 &get_interface_state('eth0');
 &get_interface_state('wlan0');
 
