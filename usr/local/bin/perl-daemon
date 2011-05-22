@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 use warnings;
 use strict;
+$| = 1;
 use IO::Socket;
 use IO::File;
 use POSIX qw(WNOHANG setsid);
@@ -29,16 +30,21 @@ my $pid = become_daemon();
 print $fh $pid;
 close $fh;
 
+open ( my $count_file, '>', '/tmp/count') || die;
 while (!$quit) {
-
-  next unless my $connection = $listen_socket->accept;
+    print $count_file time, "\n";
+    my $oldh = select( $count_file );
+    $| = 1;
+    select( $oldh );
+    sleep 1;
+  # next unless my $connection = $listen_socket->accept;
   
-  die "Not able to fork: $!" unless defined (my $child = fork());
-  if ($child == 0) {
-    $listen_socket->close;
-    interact($connection);
-    exit 0;
-  }
+  # die "Not able to fork: $!" unless defined (my $child = fork());
+  # if ($child == 0) {
+  #   $listen_socket->close;
+  #   interact($connection);
+  #   exit 0;
+  # }
 }
 
 sub open_pid_file {
