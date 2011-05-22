@@ -23,9 +23,12 @@ my %available_macs = &available_networks(@network_scan);
 
 foreach my $mac ( keys %known_macs ) {
   if ( $available_macs{$mac} ) {
-    print "=> Network '$available_macs{$mac}{essid}' found...\n";
+    print "=> Network '$available_macs{$mac}{essid}' found, connecting ...\n";
     &connect_to_network( $mac, \%known_macs, \%available_macs );
   }
+  open ( my $essid_file, '>', '/tmp/essid' ) || die "Unable to open /tmp/essid for output";
+  print $essid_file "$mac\n";
+  close $essid_file;
 }
 
 print `date`;
