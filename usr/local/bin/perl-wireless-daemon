@@ -39,7 +39,7 @@ while (!$quit) {
     if ( $carrier == 0 ) {
 	system("perl-wireless-connect");
 	print $log_file time, ": $essid\n";
-	my $oldh = select( $ );
+	my $oldh = select( $log_file );
 	$| = 1;
 	select( $oldh );
     }
