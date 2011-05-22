@@ -17,12 +17,22 @@ foreach my $mac ( keys %known_macs ) {
   }
 }
 
+sub connect_to_wep {
+    my ($key, $essid) = @_;
+    print "Do not connect if connected!!!!\n";
+#    system("/usr/sbin/iwconfig wlan0 key $key");
+#    system("/usr/sbin/iwconfig wlan0 essid $essid");
+}
+
 sub connect_to_network {
   my ( $mac, %HoH ) = @_;
   print "ESSID: $HoH{$mac}{essid}\n";
   print "ENCRYPTION: $HoH{$mac}{encryption}\n";
   print "QUALITY: $HoH{$mac}{quality}\n";
   print "SECURITY: $HoH{$mac}{security}\n";
+  if ( $HoH{$mac}{security} eq 'WEP') {
+      &connect_to_wep( $HoH{$mac}{key}, $HoH{$mac}{essid} );
+  }
 }
 
 # Read mac, essid from file
@@ -74,27 +84,3 @@ sub available_networks {
   return %HoC;
 }    
 print `date`;
-__END__
-
-
-&display_sort;
-sub display_sort {
-  my ( $mac, $strength, $essid, $security );
-  format STDOUT_TOP =
-hardware address  strength Network name             Security Type
------------------ -------- ----------------------   -------------
-.
-
-    format STDOUT =
-@<<<<<<<<<<<<<<<< @>>>>>>> @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<@<<<<<<<<<<<<<<<
-$mac,           $strength,  $essid, $security
-.
-
-    foreach $mac ( sort { $HoC{$b}{Quality} <=> $HoC{$a}{Quality} } keys %HoC ) {
-      $strength = $HoC{$mac}{Quality};
-      $essid = "'" . $HoC{$mac}{ESSID} . "'";
-      write;
-    }
-  ;
-
-}
