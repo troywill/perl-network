@@ -9,11 +9,11 @@ my $SCAN_COMMAND = "${SUDO} iwlist ${WIRELESS_INTERFACE} scanning";
 &bring_up_wireless_interface ( $WIRELESS_INTERFACE );
 
 sub bring_up_wireless_interface {
-    my $interface = shift;
-    chomp(my $operstate = `cat /sys/class/net/wlan0/operstate`);
-    if ( $operstate eq 'down') {
-	system("$SUDO ip link set wlan0 up");
-    }
+  my $interface = shift;
+  chomp(my $operstate = `cat /sys/class/net/wlan0/operstate`);
+  if ( $operstate eq 'down') {
+    system("$SUDO ip link set wlan0 up");
+  }
 }
 
 my ( %known_macs ) = &read_known_networks();
@@ -24,16 +24,41 @@ my %available_macs = &available_networks(@network_scan);
 foreach my $mac ( keys %known_macs ) {
   if ( $available_macs{$mac} ) {
     print "=> Network '$available_macs{$mac}{essid}' found, connecting ...\n";
-    &connect_to_network( $mac, \%known_macs, \%available_macs );
+    &connect_to_network_by_mac( $mac, \%known_macs, \%available_macs );
+    open ( my $essid_file, '>', '/tmp/essid' ) || die "Unable to open /tmp/essid for output";
+    print $essid_file "$mac\n";
+    close $essid_file;
   }
-  open ( my $essid_file, '>', '/tmp/essid' ) || die "Unable to open /tmp/essid for output";
-  print $essid_file "$mac\n";
-  close $essid_file;
+}
+
+print "DEBUG: Not able to connect to known network, connect to open\n";
+my %open_networks = ( 'Wayport_Access' => 'McDonalds', 'attwifi' => 'Starbucks' );
+
+foreach my $mac ( keys %available_macs ) {
+  print "==>$mac<==\n";
+  if ( $available_macs{$mac}{encryption} eq 'off' ) {
+    print "$mac: '$available_macs{$mac}{essid}' is an open network\n";
+    print "Let us try to connect to this wireless network\n";
+    foreach my $essid ( keys %open_networks ) {
+      if ( $essid eq $available_macs{$mac}{essid} ) {
+	print "Connecting to open network => $essid\n";
+	&connect_to_open_network($essid);
+      }
+    }
+  }
+}
+
+sub connect_to_open_network {
+  my $essid = shift;
+  print "DEBUG: Do not connect if connected!!!!\n";
+  print "[$essid]\n";
+  system("$SUDO /usr/sbin/iwconfig wlan0 essid $essid");
+  system("$SUDO dhcpcd wlan0");
 }
 
 print `date`;
 
-sub connect_to_network {
+sub connect_to_network_by_mac {
   # %HoH is hash of available wireless cell hashes from external program ( iwlist scanning )
   my ( $mac, $known_macs_ref, $HoH_ref ) = @_;
   my %known_macs_ref = %{$known_macs_ref};
@@ -43,18 +68,18 @@ sub connect_to_network {
   print "QUALITY: $HoH{$mac}{quality}\n";
   print "SECURITY: $HoH{$mac}{security}\n";
   if ( $HoH{$mac}{security} eq 'WEP') {
-      my $key = $known_macs{$mac}{key};
-      &connect_to_wep( $key, $HoH{$mac}{essid} );
+    my $key = $known_macs{$mac}{key};
+    &connect_to_wep( $key, $HoH{$mac}{essid} );
   }
 }
 
 sub connect_to_wep {
-    my ($key, $essid) = @_;
-    print "DEBUG: Do not connect if connected!!!!\n";
-    print "[$key][$essid]\n";
-    system("$SUDO /usr/sbin/iwconfig wlan0 key $key");
-    system("$SUDO /usr/sbin/iwconfig wlan0 essid $essid");
-    system("$SUDO dhcpcd wlan0");
+  my ($key, $essid) = @_;
+  print "DEBUG: Do not connect if connected!!!!\n";
+  print "[$key][$essid]\n";
+  system("$SUDO /usr/sbin/iwconfig wlan0 key $key");
+  system("$SUDO /usr/sbin/iwconfig wlan0 essid $essid");
+  system("$SUDO dhcpcd wlan0");
 }
 
 # Read mac, essid from file
@@ -108,10 +133,10 @@ sub available_networks {
 }    
 
 sub get_sudo {
-    my $sudo_binary = shift;
-    my $sudo = '';
-    unless ( $ENV{USER} eq 'root' ) {
-	$sudo = $sudo_binary if ( -e $sudo_binary );
-    }
-    return $sudo;
+  my $sudo_binary = shift;
+  my $sudo = '';
+  unless ( $ENV{USER} eq 'root' ) {
+    $sudo = $sudo_binary if ( -e $sudo_binary );
+  }
+  return $sudo;
 }

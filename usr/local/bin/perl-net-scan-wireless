@@ -1,15 +1,24 @@
 #!/usr/bin/env perl
 use warnings;
 use strict;
-
+my $CLEAR = `clear`;
+my $SUDO = &get_sudo('/usr/bin/sudo');
+sub get_sudo {
+    my $sudo_binary = shift;
+    my $sudo = '';
+    unless ( $ENV{USER} eq 'root' ) {
+	$sudo = $sudo_binary if ( -e $sudo_binary );
+    }
+    return $sudo;
+}
 my $INTERFACE = 'wlan0';
 
 chomp(my $operstate = `cat /sys/class/net/wlan0/operstate`);
 if ( $operstate eq 'down') {
-    system("ip link set wlan0 up");
+    system("$SUDO ip link set wlan0 up");
 }
 
-my $SCAN_COMMAND = "iwlist $INTERFACE scanning";
+my $SCAN_COMMAND = "$SUDO iwlist $INTERFACE scanning";
 
 my ( %cell, %HoC, $mac, $security_type );
 
@@ -48,6 +57,7 @@ format STDOUT =
 $mac,           $strength,  $essid, $security
 .
 
+print $CLEAR;
   foreach $mac ( sort { $HoC{$b}{Quality} <=> $HoC{$a}{Quality} } keys %HoC ) {
 
     $strength = $HoC{$mac}{Quality};
