@@ -3,7 +3,9 @@ use warnings;
 use strict;
 use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 use constant WIRELESS_INTERFACE => 'wlan0';
-my $SCAN_COMMAND = "iwlist " . WIRELESS_INTERFACE . " scanning";
+my $WIRELESS_INTERFACE = 'wlan0';
+my $SUDO = &get_sudo('/usr/bin/sudo');
+my $SCAN_COMMAND = "${SUDO} iwlist ${WIRELESS_INTERFACE} scanning";
 
 my ( %known_macs ) = &read_known_networks();
 print "=> Scanning for available networks ...\n";
@@ -16,6 +18,8 @@ foreach my $mac ( keys %known_macs ) {
     &connect_to_network( $mac, \%known_macs, \%available_macs );
   }
 }
+
+print `date`;
 
 sub connect_to_network {
   # %HoH is hash of available wireless cell hashes from external program ( iwlist scanning )
@@ -90,4 +94,12 @@ sub available_networks {
   }
   return %HoC;
 }    
-print `date`;
+
+sub get_sudo {
+    my $sudo_binary = shift;
+    my $sudo = '';
+    unless ( $ENV{USER} eq 'root' ) {
+	$sudo = $sudo_binary if ( -e $sudo_binary );
+    }
+    return $sudo;
+}
