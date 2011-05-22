@@ -6,28 +6,36 @@ use constant WIRELESS_INTERFACE => 'wlan0';
 my $SCAN_COMMAND = "iwlist " . WIRELESS_INTERFACE . " scanning";
 
 my ( %known_macs, %known_essids ) = &known_networks();
-print "Scanning for available networks...\n";
+print "\n.... Scanning for available networks ...\n";
 my @network_scan = `$SCAN_COMMAND`;
 my %available_macs = &available_networks(@network_scan);
 
 foreach my $mac ( keys %known_macs ) {
-    if ( $available_macs{$mac} ) {
-	print "=> Network '$available_macs{$mac}{essid}' found...\n";
-	connect_to_network(
-    }
+  if ( $available_macs{$mac} ) {
+    print "=> Network '$available_macs{$mac}{essid}' found...\n";
+    &connect_to_network( $mac, %available_macs );
+  }
 }
 
-x# Read mac, essid from file
+sub connect_to_network {
+  my ( $mac, %HoH ) = @_;
+  print "ESSID: $HoH{$mac}{essid}\n";
+  print "ENCRYPTION: $HoH{$mac}{encryption}\n";
+  print "QUALITY: $HoH{$mac}{quality}\n";
+  print "SECURITY: $HoH{$mac}{security}\n";
+}
+
+# Read mac, essid from file
 sub known_networks {
-    my %HoN;
-    open my $fh, "<", WIRELESS_FILE;
-    while (<$fh>) {
-	chomp;
-	my ( $mac, $essid, $key, $security_type ) = split /,/;
-	$HoN{$mac}{essid} = $essid;
-	$HoN{$mac}{key} = $key;
-    }
-    return ( %HoN, %HoN );
+  my %HoN;
+  open my $fh, "<", WIRELESS_FILE;
+  while (<$fh>) {
+    chomp;
+    my ( $mac, $essid, $key, $security_type ) = split /,/;
+    $HoN{$mac}{essid} = $essid;
+    $HoN{$mac}{key} = $key;
+  }
+  return ( %HoN, %HoN );
 }
 
 sub available_networks {
@@ -53,38 +61,40 @@ sub available_networks {
       $HoC{$mac}{security} = $security_type;
     }
   }
+  # iwlist scanning does not indicate explicitly when a network is using WEP security
+  # Let's deduce this by checking if security is on and WPA or WPA are not involved
+  foreach $mac ( keys %HoC ) {
+    if ( $HoC{$mac}{security} ) {
+    } elsif ( $HoC{$mac}{encryption} eq 'off' ) {
+      $HoC{$mac}{security} = 'off';
+    } else {
+      $HoC{$mac}{security} = 'WEP';
+    }
+  }
   return %HoC;
 }    
 print `date`;
 __END__
 
 
-    &display_sort;
-  sub display_sort {
-    my ( $mac, $strength, $essid, $security );
-    format STDOUT_TOP =
+&display_sort;
+sub display_sort {
+  my ( $mac, $strength, $essid, $security );
+  format STDOUT_TOP =
 hardware address  strength Network name             Security Type
 ----------------- -------- ----------------------   -------------
 .
 
-      format STDOUT =
+    format STDOUT =
 @<<<<<<<<<<<<<<<< @>>>>>>> @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<@<<<<<<<<<<<<<<<
 $mac,           $strength,  $essid, $security
 .
 
-      foreach $mac ( sort { $HoC{$b}{Quality} <=> $HoC{$a}{Quality} } keys %HoC ) {
+    foreach $mac ( sort { $HoC{$b}{Quality} <=> $HoC{$a}{Quality} } keys %HoC ) {
+      $strength = $HoC{$mac}{Quality};
+      $essid = "'" . $HoC{$mac}{ESSID} . "'";
+      write;
+    }
+  ;
 
-	$strength = $HoC{$mac}{Quality};
-	$essid = "'" . $HoC{$mac}{ESSID} . "'";
-	if ( $HoC{$mac}{security} ) {
-	  $security = $HoC{$mac}{security};
-	} elsif ( $HoC{$mac}{Encryption} eq 'off' ) {
-	  $security = "[open network]";
-	} else {
-	  $security = "WEP";
-	}
-	write;
-      }
-    ;
-
-  }
+}
