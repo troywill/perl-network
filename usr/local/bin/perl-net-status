@@ -12,7 +12,7 @@ my $verbose = 1;
 
 # "icmp", "udp", "tcp", "syn", "stream", or "external"
 # my $p = Net::Ping->new('icmp');
-my $p = Net::Ping->new('syn');
+my $p = Net::Ping->new('external');
 my $result = $p->ping('74.125.224.180');
 print "=>$result<=\n";
 $p->close();
