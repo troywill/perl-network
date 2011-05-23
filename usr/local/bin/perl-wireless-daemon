@@ -37,12 +37,12 @@ close $essid_file;
 while (!$quit) {
     chomp(my $carrier = `cat /sys/class/net/wlan0/carrier`);
     if ( $carrier == 0 ) {
-	system("perl-wireless-connect");
 	chomp( my $date = `date` );
-	print $log_file time, ", $essid lost at\n";
+	print $log_file "[$essid][$date]\n";
 	my $oldh = select( $log_file );
 	$| = 1;
 	select( $oldh );
+	system("perl-wireless-connect");
     }
     sleep 1;
   # next unless my $connection = $listen_socket->accept;
