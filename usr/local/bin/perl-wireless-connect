@@ -9,6 +9,7 @@ my $SUDO_BINARY = '/usr/bin/sudo';
 my $WIRELESS_INTERFACE = 'wlan0';
 my $SUDO               = &get_sudo($SUDO_BINARY);
 my $SCAN_COMMAND       = "${SUDO} iwlist ${WIRELESS_INTERFACE} scanning";
+my $VIDEO_COMMAND = 'mplayer -zoom -x 640 -y 480 /usr/local/share/mcdonalds.flv';
 use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 
 my $carrier = &get_carrier( $CARRIER_SYS_FILE );
@@ -51,6 +52,11 @@ sub search_for_open_networks {
 
 system("perl-wireless-daemon");
 
+sub run_video {
+    my $command = shift;
+    system $command;
+}
+
 sub connect_to_open_network {
     my $essid = shift;
     &wait_for_interface();
@@ -61,6 +67,7 @@ sub connect_to_open_network {
     print "DEBUG: check ESSID after doing iwconfig wlan0 essid $essid ...\n"; 
     system("$SUDO iwconfig wlan0 | grep ESSID");
     &run_dhcpcd( $WIRELESS_INTERFACE );
+    &run_video($VIDEO_COMMAND);
     exit;
 }
 
