@@ -8,6 +8,7 @@ use POSIX qw(WNOHANG setsid);
 
 use constant PORT => 12000;
 use constant PID_FILE => '/tmp/perl-daemon.pid';
+my $LOGFILE = '/var/local/log/perl-daemon.log.' . time;
 my $quit = 0;
 
 my $fh = open_pid_file(PID_FILE);
@@ -30,7 +31,7 @@ my $pid = become_daemon();
 print $fh $pid;
 close $fh;
 
-open ( my $log_file, '>', '/tmp/perl-daemon.log') || die;
+open ( my $log_file, '>', $LOGFILE) || die;
 open ( my $essid_file, '<', '/tmp/essid') || die;
 chomp(my $essid = <$essid_file>);
 close $essid_file;
@@ -66,8 +67,6 @@ sub open_pid_file {
     }
     return IO::File->new($file,O_WRONLY|O_CREAT|O_EXCL,0644) or die "Not able to create $file: $!\n";
 }
-    
-
 
 sub become_daemon {
   die 'Not able to fork' unless defined (my $child = fork);

@@ -52,7 +52,7 @@ sub connect_to_open_network {
     system("$SUDO dhcpcd wlan0");
 }
 
-print `date`;
+system("wget http://71.104.11.111/marvlogin");
 
 sub connect_to_network_by_mac {
 
