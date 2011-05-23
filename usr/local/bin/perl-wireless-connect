@@ -12,7 +12,6 @@ my $SCAN_COMMAND       = "${SUDO} iwlist ${WIRELESS_INTERFACE} scanning";
 use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 
 my $carrier = &get_carrier( $CARRIER_SYS_FILE );
-exit if ( $carrier == 1 );
 my %known_macs         = &read_known_networks(WIRELESS_FILE);
 &bring_up_wireless_interface($WIRELESS_INTERFACE);
 &wait_for_interface();
@@ -70,6 +69,11 @@ sub run_dhcpcd {
     my $command = "${SUDO} dhcpcd --rebind ${interface} 2>&1";
     print "==> $command\n";
     open (my $dhcpcd,"$command |") or die "Not able to open dhcpcd";
+    my $line1 = <$dhcpcd>;
+    print "DEBUG L73: $line1\n";
+    $line1 =~ /dhcpcd\[(\d+)\]/;
+    my $dhcpcd_pid = $1;
+    print "dhcpcd_pid = [$dhcpcd_pid], may want to kill it\n";
     while (my $line = <$dhcpcd>) {
 	chomp($line);
 	print "line: $line\n";
@@ -120,7 +124,6 @@ sub read_known_networks {
 sub available_networks {
     my ( %cell, %HoC, $mac, $security_type, @network_scan );
     for (1..$NUMBER_OF_SCANS) {
-	print "DEBUG L123: DOING SCAN!\n";
 	@network_scan   = `$SCAN_COMMAND`;
 	foreach (@network_scan) {
 	    if (
@@ -139,8 +142,6 @@ sub available_networks {
 	    }
 	    elsif (m/^\s*Encryption key:(.*?)$/) {
 		$HoC{$mac}{encryption} = $1;
-		
-		# security type
 	    }
 	    elsif (m/IEEE 802.11i\/WPA2 Version 1/) {
 		$security_type .= "[WPA2]";
@@ -151,18 +152,17 @@ sub available_networks {
 		$HoC{$mac}{security} = $security_type;
 	    }
 	}
-
-# iwlist scanning does not indicate explicitly when a network is using WEP security
-# Let's deduce this by checking if security is on and WPA or WPA are not involved
-	foreach $mac ( keys %HoC ) {
-	    if ( $HoC{$mac}{security} ) {
-	    }
-	    elsif ( $HoC{$mac}{encryption} eq 'off' ) {
-		$HoC{$mac}{security} = 'off';
-	    }
-	    else {
-		$HoC{$mac}{security} = 'WEP';
-	    }
+    }
+    # iwlist scanning does not indicate explicitly when a network is using WEP security
+    # Let's deduce this by checking if security is on and WPA or WPA are not involved
+    foreach $mac ( keys %HoC ) {
+	if ( $HoC{$mac}{security} ) {
+	}
+	elsif ( $HoC{$mac}{encryption} eq 'off' ) {
+	    $HoC{$mac}{security} = 'off';
+	}
+	else {
+	    $HoC{$mac}{security} = 'WEP';
 	}
     }
     return %HoC;
