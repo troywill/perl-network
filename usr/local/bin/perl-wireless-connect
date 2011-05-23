@@ -2,6 +2,7 @@
 use warnings;
 use strict;
 my $VERBOSE            = 1;
+my $NUMBER_OF_SCANS = 2;
 my $CARRIER_SYS_FILE = '/sys/class/net/wlan0/carrier';
 my $OPERSTATE_SYS_FILE = '/sys/class/net/wlan0/operstate';
 my $SUDO_BINARY = '/usr/bin/sudo';
@@ -15,8 +16,7 @@ exit if ( $carrier == 1 );
 my %known_macs         = &read_known_networks(WIRELESS_FILE);
 &bring_up_wireless_interface($WIRELESS_INTERFACE);
 &wait_for_interface();
-my @network_scan   = `$SCAN_COMMAND`;
-my %available_macs = &available_networks(@network_scan);
+my %available_macs = &available_networks();
 &print_message_marv();
 &connect_to_secure_network();
 exit if ( $carrier == 1 );
@@ -118,49 +118,52 @@ sub read_known_networks {
 }
 
 sub available_networks {
-    my @scan = @_;
-    my ( %cell, %HoC, $mac, $security_type );
-    foreach (@scan) {
-        if (
-m/^\s+Cell\s+\d+\s+-*\s*Address:\s*(([0-9a-fA-F]{2}[:-]{1}){5}([0-9a-fA-F]{2}))/
-          )
-        {
-            $mac           = $1;
-            %cell          = ( mac => $mac );
-            $security_type = '';
-        }
-        elsif (m/^\s*ESSID:*\"(.*?)\"/) {
-            $HoC{$mac}{essid} = $1;
-        }
-        elsif (m/^\s*Quality=(\d+)\/(\d+)\s*/) {
-            $HoC{$mac}{quality} = $1;
-        }
-        elsif (m/^\s*Encryption key:(.*?)$/) {
-            $HoC{$mac}{encryption} = $1;
-
-            # security type
-        }
-        elsif (m/IEEE 802.11i\/WPA2 Version 1/) {
-            $security_type .= "[WPA2]";
-            $HoC{$mac}{security} = $security_type;
-        }
-        elsif (m/WPA Version 1/) {
-            $security_type .= "[WPA]";
-            $HoC{$mac}{security} = $security_type;
-        }
-    }
+    my ( %cell, %HoC, $mac, $security_type, @network_scan );
+    for (1..$NUMBER_OF_SCANS) {
+	print "DEBUG L123: DOING SCAN!\n";
+	@network_scan   = `$SCAN_COMMAND`;
+	foreach (@network_scan) {
+	    if (
+		m/^\s+Cell\s+\d+\s+-*\s*Address:\s*(([0-9a-fA-F]{2}[:-]{1}){5}([0-9a-fA-F]{2}))/
+		)
+	    {
+		$mac           = $1;
+		%cell          = ( mac => $mac );
+		$security_type = '';
+	    }
+	    elsif (m/^\s*ESSID:*\"(.*?)\"/) {
+		$HoC{$mac}{essid} = $1;
+	    }
+	    elsif (m/^\s*Quality=(\d+)\/(\d+)\s*/) {
+		$HoC{$mac}{quality} = $1;
+	    }
+	    elsif (m/^\s*Encryption key:(.*?)$/) {
+		$HoC{$mac}{encryption} = $1;
+		
+		# security type
+	    }
+	    elsif (m/IEEE 802.11i\/WPA2 Version 1/) {
+		$security_type .= "[WPA2]";
+		$HoC{$mac}{security} = $security_type;
+	    }
+	    elsif (m/WPA Version 1/) {
+		$security_type .= "[WPA]";
+		$HoC{$mac}{security} = $security_type;
+	    }
+	}
 
 # iwlist scanning does not indicate explicitly when a network is using WEP security
 # Let's deduce this by checking if security is on and WPA or WPA are not involved
-    foreach $mac ( keys %HoC ) {
-        if ( $HoC{$mac}{security} ) {
-        }
-        elsif ( $HoC{$mac}{encryption} eq 'off' ) {
-            $HoC{$mac}{security} = 'off';
-        }
-        else {
-            $HoC{$mac}{security} = 'WEP';
-        }
+	foreach $mac ( keys %HoC ) {
+	    if ( $HoC{$mac}{security} ) {
+	    }
+	    elsif ( $HoC{$mac}{encryption} eq 'off' ) {
+		$HoC{$mac}{security} = 'off';
+	    }
+	    else {
+		$HoC{$mac}{security} = 'WEP';
+	    }
+	}
     }
     return %HoC;
 }
