@@ -44,6 +44,8 @@ foreach my $mac ( keys %available_macs ) {
     }
 }
 
+system("perl-wireless-daemon");
+
 sub connect_to_open_network {
     my $essid = shift;
     print "DEBUG: Do not connect if connected!!!!\n";
