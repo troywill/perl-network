@@ -2,45 +2,51 @@
 use warnings;
 use strict;
 my $VERBOSE            = 1;
-use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
-my %known_macs         = &read_known_networks(WIRELESS_FILE);
+my $CARRIER_SYS_FILE = '/sys/class/net/wlan0/carrier';
+my $OPERSTATE_SYS_FILE = '/sys/class/net/wlan0/operstate';
+my $SUDO_BINARY = '/usr/bin/sudo';
 my $WIRELESS_INTERFACE = 'wlan0';
-my $SUDO               = &get_sudo('/usr/bin/sudo');
+my $SUDO               = &get_sudo($SUDO_BINARY);
 my $SCAN_COMMAND       = "${SUDO} iwlist ${WIRELESS_INTERFACE} scanning";
+use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 
+my $carrier = &get_carrier( $CARRIER_SYS_FILE );
+exit if ( $carrier == 1 );
+my %known_macs         = &read_known_networks(WIRELESS_FILE);
 &bring_up_wireless_interface($WIRELESS_INTERFACE);
-print "=> Scanning for available networks ...\n" if $VERBOSE;
+&wait_for_interface();
 my @network_scan   = `$SCAN_COMMAND`;
 my %available_macs = &available_networks(@network_scan);
+&print_message_marv();
+&connect_to_secure_network();
+exit if ( $carrier == 1 );
+&search_for_open_networks();
 
-foreach my $mac ( keys %known_macs ) {
-    if ( $available_macs{$mac} ) {
-        print
-          "=> Network '$available_macs{$mac}{essid}' found, connecting ...\n";
-        &connect_to_network_by_mac( $mac, \%known_macs, \%available_macs );
-        open( my $essid_file, '>', '/tmp/essid' )
-          || die "Unable to open /tmp/essid for output";
-        print $essid_file "$mac\n";
-        close $essid_file;
+sub connect_to_secure_network {
+    foreach my $mac ( keys %known_macs ) {
+	if ( $available_macs{$mac} ) {
+	    print
+		"==> Network '$available_macs{$mac}{essid}' found, connecting ...\n";
+	    &connect_to_network_by_mac( $mac, \%known_macs, \%available_macs );
+	    open( my $essid_file, '>', '/tmp/essid' )
+		|| die "Unable to open /tmp/essid for output";
+	    print $essid_file "$mac\n";
+	    close $essid_file;
+	}
     }
 }
 
-print "DEBUG: Not able to connect to known network, connect to open\n";
-my %open_networks =
-  ( 'Wayport_Access' => 'McDonalds' );
-#  ( 'Wayport_Access' => 'McDonalds', 'attwifi' => 'Starbucks' );
-
-foreach my $mac ( keys %available_macs ) {
-    print "==>$mac<==\n";
-    if ( $available_macs{$mac}{encryption} eq 'off' ) {
-        print "$mac: '$available_macs{$mac}{essid}' is an open network\n";
-        print "Let us try to connect to this wireless network\n";
-        foreach my $essid ( keys %open_networks ) {
-            if ( $essid eq $available_macs{$mac}{essid} ) {
-                print "Connecting to open network => $essid\n";
-                &connect_to_open_network($essid);
-            }
-        }
+sub search_for_open_networks {
+    my %open_networks =
+	( 'Wayport_Access' => 'McDonalds' );
+    foreach my $mac ( keys %available_macs ) {
+	if ( $available_macs{$mac}{encryption} eq 'off' ) {
+	    foreach my $essid ( keys %open_networks ) {
+		if ( $essid eq $available_macs{$mac}{essid} ) {
+		    &connect_to_open_network($essid);
+		}
+	    }
+	}
     }
 }
 
@@ -48,13 +54,12 @@ system("perl-wireless-daemon");
 
 sub connect_to_open_network {
     my $essid = shift;
-    print "DEBUG: Do not connect if connected!!!!\n";
-    print "[$essid]\n";
+    print "DEBUG: wait_for_interface...\n"; &wait_for_interface();
+    print "==> Connecting to open network [$essid]\n";
     system("$SUDO /usr/sbin/iwconfig wlan0 essid $essid");
-    system("$SUDO dhcpcd wlan0");
+    system("$SUDO dhcpcd --rebind wlan0");
+    exit;
 }
-
-system("wget http://71.104.11.111/marvlogin");
 
 sub connect_to_network_by_mac {
 
@@ -62,10 +67,6 @@ sub connect_to_network_by_mac {
     my ( $mac, $known_macs_ref, $HoH_ref ) = @_;
     my %known_macs_ref = %{$known_macs_ref};
     my %HoH            = %{$HoH_ref};
-    print "ESSID: $HoH{$mac}{essid}\n";
-    print "ENCRYPTION: $HoH{$mac}{encryption}\n";
-    print "QUALITY: $HoH{$mac}{quality}\n";
-    print "SECURITY: $HoH{$mac}{security}\n";
 
     if ( $HoH{$mac}{security} eq 'WEP' ) {
         my $key = $known_macs{$mac}{key};
@@ -75,10 +76,8 @@ sub connect_to_network_by_mac {
 
 sub connect_to_wep {
     my ( $key, $essid ) = @_;
-    print "DEBUG: Do not connect if connected!!!!\n";
-    print "[$key][$essid]\n";
-    system("$SUDO /usr/sbin/iwconfig wlan0 key $key");
-    system("$SUDO /usr/sbin/iwconfig wlan0 essid $essid");
+    print "==> [$key][$essid]\n";
+    system("$SUDO /usr/sbin/iwconfig wlan0 key $key essid $essid");
     system("$SUDO dhcpcd wlan0");
 }
 
@@ -156,8 +155,54 @@ sub get_sudo {
 
 sub bring_up_wireless_interface {
     my $interface = shift;
-    chomp( my $operstate = `cat /sys/class/net/wlan0/operstate` );
+    my $operstate = get_operstate( $OPERSTATE_SYS_FILE );
     if ( $operstate eq 'down' ) {
         system("$SUDO ip link set wlan0 up");
     }
+}
+
+sub wait_for_interface {
+    my ( $operstate, $carrier ) = &get_interface_state;
+    while (($carrier != 1) && ($carrier!=0)) {
+	print "--------------------- carrier != 1 or 0 ------------------\n";
+	system("sudo ip link set wlan0 up 2>/dev/null");
+	( $operstate, $carrier ) = &get_interface_state;
+    }
+    while (( $operstate ne 'up') && ( $operstate ne 'down')) {
+	print "---- operstate ne 'up' ------------------\n";
+	system("sudo ip link set wlan0 up 2>/dev/null");
+	( $operstate, $carrier ) = &get_interface_state;
+	print "-----------------------------------------\n";
+	print "\t==> [ $operstate, $carrier ]\n";
+	sleep 1;
+    }
+}
+
+sub get_interface_state {
+    my $operstate = get_operstate( $OPERSTATE_SYS_FILE );
+    my $carrier = get_carrier( $CARRIER_SYS_FILE );
+    print "operstate = $operstate, carrier = $carrier\n" if $VERBOSE;
+    return ( $operstate, $carrier );
+}
+
+sub print_message_marv {
+    print "==> Detecting if you are at 456 W San Jose or 475 Stanford ...\n";
+}
+
+sub get_carrier {
+    my $sys_file = shift;
+    open( my $fh, '<', $sys_file ) or die "Unable to open $sys_file for reading: $!";
+    my $carrier = <$fh>;
+    close $fh;
+    $carrier = -1 if !defined($carrier);
+    chomp( $carrier );
+    return $carrier;
+}
+
+sub get_operstate {
+    my $sys_file = shift;
+    open( my $fh, '<', $sys_file ) or die "Unable to open $sys_file for reading: $!";
+    chomp(my $operstate = <$fh>);
+    close $fh;
+    return $operstate;
 }
