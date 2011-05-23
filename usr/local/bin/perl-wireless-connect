@@ -54,11 +54,31 @@ system("perl-wireless-daemon");
 
 sub connect_to_open_network {
     my $essid = shift;
-    print "DEBUG: wait_for_interface...\n"; &wait_for_interface();
+    &wait_for_interface();
     print "==> Connecting to open network [$essid]\n";
     system("$SUDO /usr/sbin/iwconfig wlan0 essid $essid");
-    system("$SUDO dhcpcd --rebind wlan0");
+    sleep 1;
+    system("$SUDO /usr/sbin/iwconfig wlan0 essid $essid");
+    print "DEBUG: check ESSID after doing iwconfig wlan0 essid $essid ...\n"; 
+    system("$SUDO iwconfig wlan0 | grep ESSID");
+    &run_dhcpcd( $WIRELESS_INTERFACE );
     exit;
+}
+
+sub run_dhcpcd {
+    my $interface = shift;
+    my $command = "${SUDO} dhcpcd --rebind ${interface} 2>&1";
+    print "==> $command\n";
+    open (my $dhcpcd,"$command |") or die "Not able to open dhcpcd";
+    while (my $line = <$dhcpcd>) {
+	chomp($line);
+	print "line: $line\n";
+	if ( $line =~ /carrier lost/ ) {
+	    print "BAILING OUT!\n";
+	    close $dhcpcd;
+	}
+    }
+    close $dhcpcd if defined($dhcpcd);
 }
 
 sub connect_to_network_by_mac {
@@ -78,7 +98,8 @@ sub connect_to_wep {
     my ( $key, $essid ) = @_;
     print "==> [$key][$essid]\n";
     system("$SUDO /usr/sbin/iwconfig wlan0 key $key essid $essid");
-    system("$SUDO dhcpcd wlan0");
+    sleep 1;
+    &run_dhcpcd( $WIRELESS_INTERFACE );
 }
 
 # Read mac, essid from file
