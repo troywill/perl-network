@@ -1,0 +1,226 @@
+#!/usr/bin/env perl
+use warnings;
+use strict;
+my $VERBOSE            = 1;
+my $NUMBER_OF_SCANS = 2;
+my $CARRIER_SYS_FILE = '/sys/class/net/wlan0/carrier';
+my $OPERSTATE_SYS_FILE = '/sys/class/net/wlan0/operstate';
+my $SUDO_BINARY = '/usr/bin/sudo';
+my $WIRELESS_INTERFACE = 'wlan0';
+my $SUDO               = &get_sudo($SUDO_BINARY);
+my $SCAN_COMMAND       = "${SUDO} iwlist ${WIRELESS_INTERFACE} scanning";
+my $VIDEO_COMMAND = 'mplayer -zoom -x 640 -y 480 /usr/local/share/mcdonalds.flv';
+my @open_networks;
+
+use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
+
+my $carrier = &get_carrier( $CARRIER_SYS_FILE );
+my %known_macs         = &read_known_networks(WIRELESS_FILE);
+&bring_up_wireless_interface($WIRELESS_INTERFACE);
+&wait_for_interface();
+my %available_open_macs = &available_networks();
+
+print "Which open network do you want to connect to? ";
+chomp( my $choice = <STDIN> );
+$choice--;
+my $command = "sudo iwconfig wlan0 essid '$open_networks[$choice]'";
+print "==>$command\n";
+system($command);
+$command = "sudo dhcpcd wlan0";
+print "==>$command\n";
+system($command);
+
+sub available_networks {
+    my $id = 1;
+
+    my ( %cell, %HoC, $mac, $security_type, @network_scan );
+    for (1..$NUMBER_OF_SCANS) {
+	@network_scan   = `$SCAN_COMMAND`;
+	foreach (@network_scan) {
+	    if (
+		m/^\s+Cell\s+\d+\s+-*\s*Address:\s*(([0-9a-fA-F]{2}[:-]{1}){5}([0-9a-fA-F]{2}))/
+		)
+	    {
+		$mac           = $1;
+		%cell          = ( mac => $mac );
+		$security_type = '';
+	    }
+	    elsif (m/^\s*ESSID:*\"(.*?)\"/) {
+		$HoC{$mac}{essid} = $1;
+	    }
+	    elsif (m/^\s*Quality=(\d+)\/(\d+)\s*/) {
+		$HoC{$mac}{quality} = $1;
+	    }
+	    elsif (m/^\s*Encryption key:(.*?)$/) {
+		$HoC{$mac}{encryption} = $1;
+	    }
+	    elsif (m/IEEE 802.11i\/WPA2 Version 1/) {
+		$security_type .= "[WPA2]";
+		$HoC{$mac}{security} = $security_type;
+	    }
+	    elsif (m/WPA Version 1/) {
+		$security_type .= "[WPA]";
+		$HoC{$mac}{security} = $security_type;
+	    }
+	}
+    }
+    # iwlist scanning does not indicate explicitly when a network is using WEP security
+    # Let's deduce this by checking if security is on and WPA or WPA are not involved
+    foreach $mac ( keys %HoC ) {
+	if ( $HoC{$mac}{security} ) {
+	}
+	elsif ( $HoC{$mac}{encryption} eq 'off' ) {
+	    $HoC{$mac}{security} = 'off';
+	}
+	else {
+	    $HoC{$mac}{security} = 'WEP';
+	}
+	if ( $HoC{$mac}{security} eq 'off' ) {
+	    if ( $HoC{$mac}{essid} ne '' ) {
+		print "[$id] $mac: $HoC{$mac}{essid}\n";
+		$id++;
+		push @open_networks, $HoC{$mac}{essid};
+	    }
+	}
+    }
+    return %HoC;
+}
+
+sub run_video {
+    my $command = shift;
+    system $command;
+}
+
+sub connect_to_open_network {
+    my $essid = shift;
+    &wait_for_interface();
+    print "==> Connecting to open network [$essid]\n";
+    system("$SUDO /usr/sbin/iwconfig wlan0 essid $essid");
+    sleep 1;
+    system("$SUDO /usr/sbin/iwconfig wlan0 essid $essid");
+    print "DEBUG: check ESSID after doing iwconfig wlan0 essid $essid ...\n"; 
+    system("$SUDO iwconfig wlan0 | grep ESSID");
+    &run_dhcpcd( $WIRELESS_INTERFACE );
+    &run_video($VIDEO_COMMAND);
+    exit;
+}
+
+sub run_dhcpcd {
+    my $interface = shift;
+    my $command = "${SUDO} dhcpcd --rebind ${interface} 2>&1";
+    print "==> $command\n";
+    open (my $dhcpcd,"$command |") or die "Not able to open dhcpcd";
+    my $line1 = <$dhcpcd>;
+    print "DEBUG L73: $line1\n";
+    $line1 =~ /dhcpcd\[(\d+)\]/;
+    my $dhcpcd_pid = $1;
+    print "dhcpcd_pid = [$dhcpcd_pid], may want to kill it\n";
+    while (my $line = <$dhcpcd>) {
+	chomp($line);
+	print "line: $line\n";
+	if ( $line =~ /carrier lost/ ) {
+	    print "BAILING OUT!\n";
+	    close $dhcpcd;
+	}
+    }
+    close $dhcpcd if defined($dhcpcd);
+}
+
+sub connect_to_network_by_mac {
+
+# %HoH is hash of available wireless cell hashes from external program ( iwlist scanning )
+    my ( $mac, $known_macs_ref, $HoH_ref ) = @_;
+    my %known_macs_ref = %{$known_macs_ref};
+    my %HoH            = %{$HoH_ref};
+
+    if ( $HoH{$mac}{security} eq 'WEP' ) {
+        my $key = $known_macs{$mac}{key};
+        &connect_to_wep( $key, $HoH{$mac}{essid} );
+    }
+}
+
+sub connect_to_wep {
+    my ( $key, $essid ) = @_;
+    print "==> [$key][$essid]\n";
+    system("$SUDO /usr/sbin/iwconfig wlan0 key $key essid $essid");
+    sleep 1;
+    &run_dhcpcd( $WIRELESS_INTERFACE );
+}
+
+# Read mac, essid from file
+sub read_known_networks {
+    my $file = shift;
+    my %HoN;
+    open my $fh, "<", $file;
+    while (<$fh>) {
+        chomp;
+        my ( $mac, $essid, $key, $security_type ) = split /,/;
+        $HoN{$mac}{essid} = $essid;
+        $HoN{$mac}{key}   = $key;
+    }
+    close $fh;
+    return (%HoN);
+}
+
+sub get_sudo {
+    my $sudo_binary = shift;
+    my $sudo        = '';
+    unless ( $ENV{USER} eq 'root' ) {
+        $sudo = $sudo_binary if ( -e $sudo_binary );
+    }
+    return $sudo;
+}
+
+sub bring_up_wireless_interface {
+    my $interface = shift;
+    my $operstate = get_operstate( $OPERSTATE_SYS_FILE );
+    if ( $operstate eq 'down' ) {
+        system("$SUDO ip link set wlan0 up");
+    }
+}
+
+sub wait_for_interface {
+    my ( $operstate, $carrier ) = &get_interface_state;
+    while (($carrier != 1) && ($carrier!=0)) {
+	print "--------------------- carrier != 1 or 0 ------------------\n";
+	system("sudo ip link set wlan0 up 2>/dev/null");
+	( $operstate, $carrier ) = &get_interface_state;
+    }
+    while (( $operstate ne 'up') && ( $operstate ne 'down')) {
+	print "---- operstate ne 'up' ------------------\n";
+	system("sudo ip link set wlan0 up 2>/dev/null");
+	( $operstate, $carrier ) = &get_interface_state;
+	print "-----------------------------------------\n";
+	print "\t==> [ $operstate, $carrier ]\n";
+	sleep 1;
+    }
+}
+
+sub get_interface_state {
+    my $operstate = get_operstate( $OPERSTATE_SYS_FILE );
+    my $carrier = get_carrier( $CARRIER_SYS_FILE );
+    print "operstate = $operstate, carrier = $carrier\n" if $VERBOSE;
+    return ( $operstate, $carrier );
+}
+
+sub print_message_marv {
+    print "==> Detecting if you are at 456 W San Jose or 475 Stanford ...\n";
+}
+
+sub get_carrier {
+    my $sys_file = shift;
+    open( my $fh, '<', $sys_file ) or die "Unable to open $sys_file for reading: $!";
+    my $carrier = <$fh>;
+    close $fh;
+    $carrier = -1 if !defined($carrier);
+    chomp( $carrier );
+    return $carrier;
+}
+
+sub get_operstate {
+    my $sys_file = shift;
+    open( my $fh, '<', $sys_file ) or die "Unable to open $sys_file for reading: $!";
+    chomp(my $operstate = <$fh>);
+    close $fh;
+    return $operstate;
+}
