@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 use warnings;
 use strict;
-my $CLEAR = `clear`;
 my $SUDO = &get_sudo('/usr/bin/sudo');
 sub get_sudo {
     my $sudo_binary = shift;
@@ -57,7 +56,6 @@ format STDOUT =
 $mac,           $strength,  $essid, $security
 .
 
-print $CLEAR;
   foreach $mac ( sort { $HoC{$b}{Quality} <=> $HoC{$a}{Quality} } keys %HoC ) {
 
     $strength = $HoC{$mac}{Quality};
