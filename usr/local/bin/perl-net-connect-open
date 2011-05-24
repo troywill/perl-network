@@ -16,41 +16,62 @@ my $carrier = &get_carrier( $CARRIER_SYS_FILE );
 my %known_macs         = &read_known_networks(WIRELESS_FILE);
 &bring_up_wireless_interface($WIRELESS_INTERFACE);
 &wait_for_interface();
-my %available_macs = &available_networks();
-&print_message_marv();
-&connect_to_secure_network();
-exit if ( $carrier == 1 );
-&search_for_open_networks();
-
-sub connect_to_secure_network {
-    foreach my $mac ( keys %known_macs ) {
-	if ( $available_macs{$mac} ) {
-	    print
-		"==> Network '$available_macs{$mac}{essid}' found, connecting ...\n";
-	    &connect_to_network_by_mac( $mac, \%known_macs, \%available_macs );
-	    open( my $essid_file, '>', '/tmp/essid' )
-		|| die "Unable to open /tmp/essid for output";
-	    print $essid_file "$mac\n";
-	    close $essid_file;
-	}
-    }
-}
-
-sub search_for_open_networks {
-    my %open_networks =
-	( 'Wayport_Access' => 'McDonalds' );
-    foreach my $mac ( keys %available_macs ) {
-	if ( $available_macs{$mac}{encryption} eq 'off' ) {
-	    foreach my $essid ( keys %open_networks ) {
-		if ( $essid eq $available_macs{$mac}{essid} ) {
-		    &connect_to_open_network($essid);
-		}
+my %available_open_macs = &available_networks();
+sub available_networks {
+    my $id = 1;
+    my @open_networks;
+    my ( %cell, %HoC, $mac, $security_type, @network_scan );
+    for (1..$NUMBER_OF_SCANS) {
+	@network_scan   = `$SCAN_COMMAND`;
+	foreach (@network_scan) {
+	    if (
+		m/^\s+Cell\s+\d+\s+-*\s*Address:\s*(([0-9a-fA-F]{2}[:-]{1}){5}([0-9a-fA-F]{2}))/
+		)
+	    {
+		$mac           = $1;
+		%cell          = ( mac => $mac );
+		$security_type = '';
+	    }
+	    elsif (m/^\s*ESSID:*\"(.*?)\"/) {
+		$HoC{$mac}{essid} = $1;
+	    }
+	    elsif (m/^\s*Quality=(\d+)\/(\d+)\s*/) {
+		$HoC{$mac}{quality} = $1;
+	    }
+	    elsif (m/^\s*Encryption key:(.*?)$/) {
+		$HoC{$mac}{encryption} = $1;
+	    }
+	    elsif (m/IEEE 802.11i\/WPA2 Version 1/) {
+		$security_type .= "[WPA2]";
+		$HoC{$mac}{security} = $security_type;
+	    }
+	    elsif (m/WPA Version 1/) {
+		$security_type .= "[WPA]";
+		$HoC{$mac}{security} = $security_type;
 	    }
 	}
     }
+    # iwlist scanning does not indicate explicitly when a network is using WEP security
+    # Let's deduce this by checking if security is on and WPA or WPA are not involved
+    foreach $mac ( keys %HoC ) {
+	if ( $HoC{$mac}{security} ) {
+	}
+	elsif ( $HoC{$mac}{encryption} eq 'off' ) {
+	    $HoC{$mac}{security} = 'off';
+	}
+	else {
+	    $HoC{$mac}{security} = 'WEP';
+	}
+	if ( $HoC{$mac}{security} eq 'off' ) {
+	    if ( $HoC{$mac}{essid} ne '' ) {
+		print "[$id] $mac: $HoC{$mac}{essid}\n";
+		$id++;
+		push @open_networks, $HoC{$mac}{essid};
+	    }
+	}
+    }
+    return %HoC;
 }
-
-system("perl-wireless-daemon");
 
 sub run_video {
     my $command = shift;
@@ -126,53 +147,6 @@ sub read_known_networks {
     }
     close $fh;
     return (%HoN);
-}
-
-sub available_networks {
-    my ( %cell, %HoC, $mac, $security_type, @network_scan );
-    for (1..$NUMBER_OF_SCANS) {
-	@network_scan   = `$SCAN_COMMAND`;
-	foreach (@network_scan) {
-	    if (
-		m/^\s+Cell\s+\d+\s+-*\s*Address:\s*(([0-9a-fA-F]{2}[:-]{1}){5}([0-9a-fA-F]{2}))/
-		)
-	    {
-		$mac           = $1;
-		%cell          = ( mac => $mac );
-		$security_type = '';
-	    }
-	    elsif (m/^\s*ESSID:*\"(.*?)\"/) {
-		$HoC{$mac}{essid} = $1;
-	    }
-	    elsif (m/^\s*Quality=(\d+)\/(\d+)\s*/) {
-		$HoC{$mac}{quality} = $1;
-	    }
-	    elsif (m/^\s*Encryption key:(.*?)$/) {
-		$HoC{$mac}{encryption} = $1;
-	    }
-	    elsif (m/IEEE 802.11i\/WPA2 Version 1/) {
-		$security_type .= "[WPA2]";
-		$HoC{$mac}{security} = $security_type;
-	    }
-	    elsif (m/WPA Version 1/) {
-		$security_type .= "[WPA]";
-		$HoC{$mac}{security} = $security_type;
-	    }
-	}
-    }
-    # iwlist scanning does not indicate explicitly when a network is using WEP security
-    # Let's deduce this by checking if security is on and WPA or WPA are not involved
-    foreach $mac ( keys %HoC ) {
-	if ( $HoC{$mac}{security} ) {
-	}
-	elsif ( $HoC{$mac}{encryption} eq 'off' ) {
-	    $HoC{$mac}{security} = 'off';
-	}
-	else {
-	    $HoC{$mac}{security} = 'WEP';
-	}
-    }
-    return %HoC;
 }
 
 sub get_sudo {
