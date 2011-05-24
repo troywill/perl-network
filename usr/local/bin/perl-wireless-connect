@@ -1,6 +1,10 @@
 #!/usr/bin/env perl
 use warnings;
 use strict;
+use FindBin qw( $Bin );
+use lib "$Bin/../lib";
+require "perl-net-common.pm";
+
 my $VERBOSE            = 1;
 my $NUMBER_OF_SCANS = 2;
 my $CARRIER_SYS_FILE = '/sys/class/net/wlan0/carrier';
@@ -14,7 +18,7 @@ use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 
 my $carrier = &get_carrier( $CARRIER_SYS_FILE );
 my %known_macs         = &read_known_networks(WIRELESS_FILE);
-&bring_up_wireless_interface($WIRELESS_INTERFACE);
+&bring_up_wireless_interface($WIRELESS_INTERFACE, $OPERSTATE_SYS_FILE);
 &wait_for_interface();
 my %available_macs = &available_networks();
 &print_message_marv();
@@ -184,13 +188,6 @@ sub get_sudo {
     return $sudo;
 }
 
-sub bring_up_wireless_interface {
-    my $interface = shift;
-    my $operstate = get_operstate( $OPERSTATE_SYS_FILE );
-    if ( $operstate eq 'down' ) {
-        system("$SUDO ip link set wlan0 up");
-    }
-}
 
 sub wait_for_interface {
     my ( $operstate, $carrier ) = &get_interface_state;
@@ -220,20 +217,4 @@ sub print_message_marv {
     print "==> Detecting if you are at 456 W San Jose or 475 Stanford ...\n";
 }
 
-sub get_carrier {
-    my $sys_file = shift;
-    open( my $fh, '<', $sys_file ) or die "Unable to open $sys_file for reading: $!";
-    my $carrier = <$fh>;
-    close $fh;
-    $carrier = -1 if !defined($carrier);
-    chomp( $carrier );
-    return $carrier;
-}
 
-sub get_operstate {
-    my $sys_file = shift;
-    open( my $fh, '<', $sys_file ) or die "Unable to open $sys_file for reading: $!";
-    chomp(my $operstate = <$fh>);
-    close $fh;
-    return $operstate;
-}
