@@ -10,6 +10,8 @@ my $WIRELESS_INTERFACE = 'wlan0';
 my $SUDO               = &get_sudo($SUDO_BINARY);
 my $SCAN_COMMAND       = "${SUDO} iwlist ${WIRELESS_INTERFACE} scanning";
 my $VIDEO_COMMAND = 'mplayer -zoom -x 640 -y 480 /usr/local/share/mcdonalds.flv';
+my @open_networks;
+
 use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 
 my $carrier = &get_carrier( $CARRIER_SYS_FILE );
@@ -17,9 +19,20 @@ my %known_macs         = &read_known_networks(WIRELESS_FILE);
 &bring_up_wireless_interface($WIRELESS_INTERFACE);
 &wait_for_interface();
 my %available_open_macs = &available_networks();
+
+print "Which open network do you want to connect to? ";
+chomp( my $choice = <STDIN> );
+$choice--;
+my $command = "sudo iwconfig wlan0 essid '$open_networks[$choice]'";
+print "==>$command\n";
+system($command);
+$command = "sudo dhcpcd wlan0";
+print "==>$command\n";
+system($command);
+
 sub available_networks {
     my $id = 1;
-    my @open_networks;
+
     my ( %cell, %HoC, $mac, $security_type, @network_scan );
     for (1..$NUMBER_OF_SCANS) {
 	@network_scan   = `$SCAN_COMMAND`;
