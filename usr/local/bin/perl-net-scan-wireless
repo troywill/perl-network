@@ -47,12 +47,12 @@ foreach (@scan) {
 sub display_sort {
     my ( $mac, $strength, $essid, $security );
 format STDOUT_TOP =
-hardware address  strength Network name             Security Type
------------------ -------- ----------------------   -------------
+Hardware address  Strength Network name                       Security type
+----------------- -------- ---------------------------------- -------------
 .
 
 format STDOUT =
-@<<<<<<<<<<<<<<<< @>>>>>>> @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<@<<<<<<<<<<<<<<<
+@<<<<<<<<<<<<<<<< @>>>>    @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<@<<<<<<<<<<<<<<<
 $mac,           $strength,  $essid, $security
 .
 
