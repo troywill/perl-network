@@ -4,6 +4,7 @@ use strict;
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 require "perl-net-scan.pm";
+require "perl-net-common.pm";
 
 my $SUDO = &get_sudo('/usr/bin/sudo');
 my $INTERFACE = 'wlan0';
@@ -15,8 +16,21 @@ if ( $operstate eq 'down') {
 }
 
 my $href = scan_hash( $INTERFACE, $scan_command );
-my %FoH = %{$href};
+my %HoC = %{$href};
 
+foreach my $mac ( sort { $HoC{$b}{Quality} <=> $HoC{$a}{Quality} } keys %HoC ) {
+    print "$mac $HoC{$mac}{Quality} $HoC{$mac}{Quality}\n";
+    foreach my $key ( keys %HoC{$mac} ) {
+	print "[$key]";
+    }
+}
+
+
+__END__
+#!/usr/bin/env perl
+use warnings;
+use strict;
+my $SUDO = &get_sudo('/usr/bin/sudo');
 sub get_sudo {
     my $sudo_binary = shift;
     my $sudo = '';
@@ -24,4 +38,65 @@ sub get_sudo {
 	$sudo = $sudo_binary if ( -e $sudo_binary );
     }
     return $sudo;
+}
+my $INTERFACE = 'wlan0';
+
+chomp(my $operstate = `cat /sys/class/net/wlan0/operstate`);
+if ( $operstate eq 'down') {
+    system("$SUDO ip link set wlan0 up");
+}
+
+my $SCAN_COMMAND = "$SUDO iwlist $INTERFACE scanning";
+
+my ( %cell, %HoC, $mac, $security_type );
+
+my @scan = `$SCAN_COMMAND`;
+foreach (@scan) {
+    if ( m/^\s+Cell\s+\d+\s+-*\s*Address:\s*(([0-9a-fA-F]{2}[:-]{1}){5}([0-9a-fA-F]{2}))/ ) {
+	$mac = $1;
+	%cell = ( mac  => $mac );
+	$security_type = '';
+    } elsif (m/^\s*ESSID:*\"(.*?)\"/ ) {
+	$HoC{$mac}{ESSID} = $1;
+    } elsif ( m/^\s*Quality=(\d+)\/(\d+)\s*/ ) {
+	$HoC{$mac}{Quality} = $1;
+    } elsif ( m/^\s*Encryption key:(.*?)$/ ) {
+	$HoC{$mac}{Encryption} = $1;
+	# security type
+    } elsif ( m/IEEE 802.11i\/WPA2 Version 1/ ) {
+	$security_type .= "[WPA2]";
+	$HoC{$mac}{security} = $security_type;
+    } elsif ( m/WPA Version 1/ ) {
+	$security_type .= "[WPA]";
+	$HoC{$mac}{security} = $security_type;
+    }
+}
+
+&display_sort;
+sub display_sort {
+    my ( $mac, $strength, $essid, $security );
+format STDOUT_TOP =
+Hardware address  Strength Network name                       Security type
+----------------- -------- ---------------------------------- -------------
+.
+
+format STDOUT =
+@<<<<<<<<<<<<<<<< @>>>>    @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<@<<<<<<<<<<<<<<<
+$mac,           $strength,  $essid, $security
+.
+
+  foreach $mac ( sort { $HoC{$b}{Quality} <=> $HoC{$a}{Quality} } keys %HoC ) {
+
+    $strength = $HoC{$mac}{Quality};
+    $essid = "'" . $HoC{$mac}{ESSID} . "'";
+    if ( $HoC{$mac}{security} ) {
+      $security = $HoC{$mac}{security};
+    }	elsif ( $HoC{$mac}{Encryption} eq 'off' ) {
+      $security = "[open network]";
+    } else {
+      $security = "WEP";
+    }
+    write;
+  };
+
 }
