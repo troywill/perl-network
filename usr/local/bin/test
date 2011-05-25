@@ -1,0 +1,27 @@
+#!/usr/bin/env perl
+use warnings;
+use strict;
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+require "perl-net-scan.pm";
+
+my $SUDO = &get_sudo('/usr/bin/sudo');
+my $INTERFACE = 'wlan0';
+my $scan_command = "$SUDO iwlist $INTERFACE scanning";
+
+chomp(my $operstate = `cat /sys/class/net/wlan0/operstate`);
+if ( $operstate eq 'down') {
+    system("$SUDO ip link set wlan0 up");
+}
+
+my $href = scan_hash( $INTERFACE, $scan_command );
+my %FoH = %{$href};
+
+sub get_sudo {
+    my $sudo_binary = shift;
+    my $sudo = '';
+    unless ( $ENV{USER} eq 'root' ) {
+	$sudo = $sudo_binary if ( -e $sudo_binary );
+    }
+    return $sudo;
+}
