@@ -2,14 +2,6 @@
 use warnings;
 use strict;
 my $SUDO = &get_sudo('/usr/bin/sudo');
-sub get_sudo {
-    my $sudo_binary = shift;
-    my $sudo = '';
-    unless ( $ENV{USER} eq 'root' ) {
-	$sudo = $sudo_binary if ( -e $sudo_binary );
-    }
-    return $sudo;
-}
 my $INTERFACE = 'wlan0';
 
 chomp(my $operstate = `cat /sys/class/net/wlan0/operstate`);
@@ -70,4 +62,13 @@ $mac,           $strength,  $essid, $security
     write;
   };
 
+}
+
+sub get_sudo {
+    my $sudo_binary = shift;
+    my $sudo = '';
+    unless ( $ENV{USER} eq 'root' ) {
+	$sudo = $sudo_binary if ( -e $sudo_binary );
+    }
+    return $sudo;
 }
