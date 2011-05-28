@@ -20,12 +20,10 @@ my %HoC = %{$href};
 
 foreach my $mac ( sort { $HoC{$b}{Quality} <=> $HoC{$a}{Quality} } keys %HoC ) {
     print "$mac $HoC{$mac}{Quality} $HoC{$mac}{Quality}\n";
-    foreach my $key ( keys %HoC{$mac} ) {
-	print "[$key]";
+    foreach my $key ( keys %{$HoC{$mac}} ) {
+     	print "\t[$key][$HoC{$mac}{$key}]\n";
     }
 }
-
-
 __END__
 #!/usr/bin/env perl
 use warnings;
