@@ -7,10 +7,10 @@ require "perl-net-common.pm";
 require "perl-net-scan.pm";
 
 my $VERBOSE          = 1;
-my $NUMBER_OF_SCANS = 2;
-my $CARRIER_SYS_FILE = '/sys/class/net/wlan0/carrier';
+my $NUMBER_OF_SCANS  = 2;
+my $CARRIER_SYS_FILE   = '/sys/class/net/wlan0/carrier';
 my $OPERSTATE_SYS_FILE = '/sys/class/net/wlan0/operstate';
-my $SUDO_BINARY = '/usr/bin/sudo';
+my $SUDO_BINARY        = '/usr/bin/sudo';
 my $WIRELESS_INTERFACE = 'wlan0';
 my $SUDO               = &get_sudo($SUDO_BINARY);
 my $SCAN_COMMAND       = "${SUDO} iwlist ${WIRELESS_INTERFACE} scanning";
@@ -18,15 +18,32 @@ my $VIDEO_COMMAND = 'mplayer -zoom -x 640 -y 480 /usr/local/share/mcdonalds.flv'
 use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 
 my $carrier = &get_carrier( $CARRIER_SYS_FILE );
-my $known_macs         = &read_known_networks(WIRELESS_FILE);
-
+my %known_macs         = &read_known_networks(WIRELESS_FILE);
 &bring_up_wireless_interface($WIRELESS_INTERFACE, $OPERSTATE_SYS_FILE);
 &wait_for_interface();
-my %available_macs = &scan_hash($WIRELESS_INTERFACE,$SCAN_COMMAND);
+my $available_macs_ref = &cell_hash($WIRELESS_INTERFACE,$SCAN_COMMAND);
+my %available_macs = %{$available_macs_ref};
+
+print keys %available_macs;
+
 &print_message_marv();
 &connect_to_secure_network();
+exit;
 exit if ( $carrier == 1 );
 &search_for_open_networks();
+
+sub connect_to_network_by_mac {
+
+# %HoH is hash of available wireless cell hashes from external program ( iwlist scanning )
+    my ( $mac, $known_macs_ref, $HoH_ref ) = @_;
+    my %known_macs_ref = %{$known_macs_ref};
+    my %HoH            = %{$HoH_ref};
+
+    if ( $HoH{$mac}{security} eq 'WEP' ) {
+        my $key = $known_macs{$mac}{key};
+        &connect_to_wep( $key, $HoH{$mac}{ESSID} );
+    }
+}
 
 sub connect_to_secure_network {
     foreach my $mac ( keys %known_macs ) {
@@ -98,40 +115,12 @@ sub run_dhcpcd {
     close $dhcpcd if defined($dhcpcd);
 }
 
-sub connect_to_network_by_mac {
-
-# %HoH is hash of available wireless cell hashes from external program ( iwlist scanning )
-    my ( $mac, $known_macs_ref, $HoH_ref ) = @_;
-    my %known_macs_ref = %{$known_macs_ref};
-    my %HoH            = %{$HoH_ref};
-
-    if ( $HoH{$mac}{security} eq 'WEP' ) {
-        my $key = $known_macs{$mac}{key};
-        &connect_to_wep( $key, $HoH{$mac}{essid} );
-    }
-}
-
 sub connect_to_wep {
     my ( $key, $essid ) = @_;
     print "==> [$key][$essid]\n";
     system("$SUDO /usr/sbin/iwconfig wlan0 key $key essid $essid");
     sleep 1;
     &run_dhcpcd( $WIRELESS_INTERFACE );
-}
-
-# Read mac, essid from file
-sub read_known_networks {
-    my $file = shift;
-    my %HoN;
-    open my $fh, "<", $file;
-    while (<$fh>) {
-        chomp;
-        my ( $mac, $essid, $key, $security_type ) = split /,/;
-        $HoN{$mac}{essid} = $essid;
-        $HoN{$mac}{key}   = $key;
-    }
-    close $fh;
-    return (%HoN);
 }
 
 sub get_sudo {
@@ -142,7 +131,6 @@ sub get_sudo {
     }
     return $sudo;
 }
-
 
 sub wait_for_interface {
     my ( $operstate, $carrier ) = &get_interface_state;
@@ -172,4 +160,17 @@ sub print_message_marv {
     print "==> Detecting if you are at 456 W San Jose or 475 Stanford ...\n";
 }
 
-
+# Read mac, essid from file
+sub read_known_networks {
+    my $file = shift;
+    my %HoN;
+    open my $fh, "<", $file;
+    while (<$fh>) {
+        chomp;
+        my ( $mac, $essid, $key, $security_type ) = split /,/;
+        $HoN{$mac}{essid} = $essid;
+        $HoN{$mac}{key}   = $key;
+    }
+    close $fh;
+    return (%HoN);
+}
