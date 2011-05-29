@@ -38,7 +38,7 @@ sub cell_hash {
 	    }
 	    $HoC{$mac}{security} = 'WEP' if ( $HoC{$mac}{security} eq '' );
 	} else {
-	    print "NO security";
+	    $HoC{$mac}{security} = 'OPEN';
 	}
     }
     return \%HoC;
