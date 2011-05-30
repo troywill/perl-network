@@ -21,10 +21,8 @@ my $carrier = get_carrier( $CARRIER_SYS_FILE );
 my %known_macs         = read_known_networks(WIRELESS_FILE);
 bring_up_wireless_interface($WIRELESS_INTERFACE, $OPERSTATE_SYS_FILE);
 wait_for_interface();
-my $available_macs_ref = cell_hash($WIRELESS_INTERFACE,$SCAN_COMMAND);
+my $available_macs_ref = wireless_cell_hash($WIRELESS_INTERFACE,$SCAN_COMMAND);
 my %available_macs = %{$available_macs_ref};
-
-print keys %available_macs;
 
 print_message_marv();
 connect_to_secure_network();
@@ -49,7 +47,7 @@ sub connect_to_secure_network {
     foreach my $mac ( keys %known_macs ) {
 	if ( $available_macs{$mac} ) {
 	    print
-		"==> Network '$available_macs{$mac}{essid}' found, connecting ...\n";
+		"==> Network '$available_macs{$mac}{ESSID}' found, connecting ...\n";
 	    connect_to_network_by_mac( $mac, \%known_macs, \%available_macs );
 	    open( my $essid_file, '>', '/tmp/essid' )
 		|| die "Unable to open /tmp/essid for output";

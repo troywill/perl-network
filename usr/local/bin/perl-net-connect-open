@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use warnings;
 use strict;
-my $VERBOSE            = 1;
+my $VERBOSE         = 1;
 my $NUMBER_OF_SCANS = 2;
 my $CARRIER_SYS_FILE = '/sys/class/net/wlan0/carrier';
 my $OPERSTATE_SYS_FILE = '/sys/class/net/wlan0/operstate';

@@ -1,6 +1,5 @@
 sub scan_to_hash {
     my ( $interface, $scan_command ) = @_;
-    print "[$interface, $scan_command]\n";
     my ( %cell, %HoC, $mac, $security_type );
     open (my $WIRELESS_SCAN, "$scan_command |") or die "Tried, but unable to open $scan_command: $!";
     while ( <$WIRELESS_SCAN> ) {
@@ -26,13 +25,12 @@ sub scan_to_hash {
     return \%HoC;
 }
 
-sub cell_hash {
+sub wireless_cell_hash {
     my ( $interface, $scan_command ) = @_;
-    my $HoC_ref = &scan_to_hash( $interface, $scan_command );
+    my $HoC_ref = scan_to_hash( $interface, $scan_command );
     my %HoC = %{$HoC_ref};
     foreach my $mac ( keys %HoC ) {
 	if ( $HoC{$mac}{Encryption} eq 'on' ) {
-	    print "DEBUG $HoC{$mac}{ESSID} =>$HoC{$mac}{security}<=\n";
 	    if ( ($HoC{$mac}{security} eq 'WPAWPA2') || ($HoC{$mac}{security} eq 'WPA2WPA')) {
 		$HoC{$mac}{security} = 'WPA+WPA2';
 	    }
