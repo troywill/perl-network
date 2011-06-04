@@ -32,10 +32,10 @@ format STDOUT =
 $mac,           $strength,  $essid, $security
 .
 
-  foreach $mac ( sort { $HoC{$b}{Quality} <=> $HoC{$a}{Quality} } keys %HoC ) {
-    $strength = $HoC{$mac}{Quality};
-    $essid = "'" . $HoC{$mac}{ESSID} . "'";
-    $security = $HoC{$mac}{security};
+  foreach $mac ( sort { $HoC{$b}{quality} <=> $HoC{$a}{quality} } keys %HoC ) {
+    $strength = $HoC{$mac}{quality};
+    $essid = "'" . $HoC{$mac}{essid} . "'";
+    $security = $HoC{$mac}{security_type};
     write;
   };
 }

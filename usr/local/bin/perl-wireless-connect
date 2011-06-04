@@ -37,9 +37,9 @@ sub connect_to_network_by_mac {
     my %known_macs_ref = %{$known_macs_ref};
     my %HoH            = %{$HoH_ref};
 
-    if ( $HoH{$mac}{security} eq 'WEP' ) {
+    if ( $HoH{$mac}{security_type} eq 'WEP' ) {
         my $key = $known_macs{$mac}{key};
-        connect_to_wep( $key, $HoH{$mac}{ESSID} );
+        connect_to_wep( $key, $HoH{$mac}{essid} );
     }
 }
 
@@ -47,7 +47,7 @@ sub connect_to_secure_network {
     foreach my $mac ( keys %known_macs ) {
 	if ( $available_macs{$mac} ) {
 	    print
-		"==> Network '$available_macs{$mac}{ESSID}' found, connecting ...\n";
+		"==> Network '$available_macs{$mac}{essid}' found, connecting ...\n";
 	    connect_to_network_by_mac( $mac, \%known_macs, \%available_macs );
 	    open( my $essid_file, '>', '/tmp/essid' )
 		|| die "Unable to open /tmp/essid for output";
@@ -61,7 +61,7 @@ sub search_for_open_networks {
     my %open_networks =
 	( 'Wayport_Access' => 'McDonalds' );
     foreach my $mac ( keys %available_macs ) {
-	if ( $available_macs{$mac}{encryption} eq 'off' ) {
+	if ( $available_macs{$mac}{encryption_state} eq 'off' ) {
 	    foreach my $essid ( keys %open_networks ) {
 		if ( $essid eq $available_macs{$mac}{essid} ) {
 		    connect_to_open_network($essid);

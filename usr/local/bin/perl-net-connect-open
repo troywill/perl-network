@@ -1,6 +1,11 @@
 #!/usr/bin/env perl
 use warnings;
 use strict;
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+require "perl-net-scan.pm";
+require "perl-net-common.pm";
+
 my $VERBOSE         = 1;
 my $NUMBER_OF_SCANS = 2;
 my $CARRIER_SYS_FILE = '/sys/class/net/wlan0/carrier';
@@ -14,10 +19,21 @@ my @open_networks;
 
 use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 
-my $carrier = &get_carrier( $CARRIER_SYS_FILE );
-my %known_macs         = &read_known_networks(WIRELESS_FILE);
-&bring_up_wireless_interface($WIRELESS_INTERFACE);
+my $carrier = get_carrier( $CARRIER_SYS_FILE );
+bring_up_wireless_interface($WIRELESS_INTERFACE,$OPERSTATE_SYS_FILE);
 &wait_for_interface();
+my $href = wireless_cell_hash( $WIRELESS_INTERFACE, $SCAN_COMMAND );
+my %HoC = %{$href};
+
+print_available_cells();
+
+sub print_available_cells {
+    foreach my $mac (keys %HoC) {
+	print "$mac\n";
+    }
+}
+
+exit;
 my %available_open_macs = &available_networks();
 
 print "Which open network do you want to connect to? ";
@@ -30,7 +46,7 @@ $command = "sudo dhcpcd wlan0";
 print "==>$command\n";
 system($command);
 
-sub available_networks {
+sub available_networks_hide {
     my $id = 1;
 
     my ( %cell, %HoC, $mac, $security_type, @network_scan );
@@ -133,10 +149,6 @@ sub connect_to_network_by_mac {
     my %known_macs_ref = %{$known_macs_ref};
     my %HoH            = %{$HoH_ref};
 
-    if ( $HoH{$mac}{security} eq 'WEP' ) {
-        my $key = $known_macs{$mac}{key};
-        &connect_to_wep( $key, $HoH{$mac}{essid} );
-    }
 }
 
 sub connect_to_wep {
@@ -145,30 +157,6 @@ sub connect_to_wep {
     system("$SUDO /usr/sbin/iwconfig wlan0 key $key essid $essid");
     sleep 1;
     &run_dhcpcd( $WIRELESS_INTERFACE );
-}
-
-# Read mac, essid from file
-sub read_known_networks {
-    my $file = shift;
-    my %HoN;
-    open my $fh, "<", $file;
-    while (<$fh>) {
-        chomp;
-        my ( $mac, $essid, $key, $security_type ) = split /,/;
-        $HoN{$mac}{essid} = $essid;
-        $HoN{$mac}{key}   = $key;
-    }
-    close $fh;
-    return (%HoN);
-}
-
-sub get_sudo {
-    my $sudo_binary = shift;
-    my $sudo        = '';
-    unless ( $ENV{USER} eq 'root' ) {
-        $sudo = $sudo_binary if ( -e $sudo_binary );
-    }
-    return $sudo;
 }
 
 sub bring_up_wireless_interface {

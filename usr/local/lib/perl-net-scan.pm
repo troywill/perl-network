@@ -8,18 +8,18 @@ sub scan_to_hash {
 	    %cell = ( mac  => $mac );
 	    $security_type = '';
 	} elsif (m/^\s*ESSID:*\"(.*?)\"/ ) {
-	    $HoC{$mac}{ESSID} = $1;
+	    $HoC{$mac}{essid} = $1;
 	} elsif ( m/^\s*Quality=(\d+)\/(\d+)\s*/ ) {
-	    $HoC{$mac}{Quality} = $1;
+	    $HoC{$mac}{quality} = $1;
 	} elsif ( m/^\s*Encryption key:(.*?)$/ ) {
-	    $HoC{$mac}{Encryption} = $1;
+	    $HoC{$mac}{encryption_state} = $1;
 	    # security type
 	} elsif ( m/IEEE 802.11i\/WPA2 Version 1/ ) {
 	    $security_type .= "WPA2";
-	    $HoC{$mac}{security} = $security_type;
+	    $HoC{$mac}{security_type} = $security_type;
 	} elsif ( m/WPA Version 1/ ) {
 	    $security_type .= "WPA";
-	    $HoC{$mac}{security} = $security_type;
+	    $HoC{$mac}{security_type} = $security_type;
 	}
     }
     return \%HoC;
@@ -30,13 +30,13 @@ sub wireless_cell_hash {
     my $HoC_ref = scan_to_hash( $interface, $scan_command );
     my %HoC = %{$HoC_ref};
     foreach my $mac ( keys %HoC ) {
-	if ( $HoC{$mac}{Encryption} eq 'on' ) {
-	    if ( ($HoC{$mac}{security} eq 'WPAWPA2') || ($HoC{$mac}{security} eq 'WPA2WPA')) {
-		$HoC{$mac}{security} = 'WPA+WPA2';
+	if ( $HoC{$mac}{encryption_state} eq 'on' ) {
+	    if ( ($HoC{$mac}{security_type} eq 'WPAWPA2') || ($HoC{$mac}{security_type} eq 'WPA2WPA')) {
+		$HoC{$mac}{security_type} = 'WPA+WPA2';
 	    }
-	    $HoC{$mac}{security} = 'WEP' if ( $HoC{$mac}{security} eq '' );
+	    $HoC{$mac}{security_type} = 'WEP' if ( $HoC{$mac}{security_type} eq '' );
 	} else {
-	    $HoC{$mac}{security} = 'OPEN';
+	    $HoC{$mac}{security_type} = 'OPEN';
 	}
     }
     return \%HoC;

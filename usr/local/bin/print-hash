@@ -13,7 +13,7 @@ my $scan_command = "$SUDO iwlist $INTERFACE scanning";
 my $href = wireless_cell_hash( $INTERFACE, $scan_command );
 my %HoC = %{$href};
 
-foreach my $mac ( sort { $HoC{$b}{Quality} <=> $HoC{$a}{Quality} } keys %HoC ) {
+foreach my $mac ( sort { $HoC{$b}{quality} <=> $HoC{$a}{quality} } keys %HoC ) {
     print "$mac:";
     foreach my $key ( keys %{$HoC{$mac}} ) {
      	print " $HoC{$mac}{$key},";
