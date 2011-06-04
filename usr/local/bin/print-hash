@@ -1,0 +1,22 @@
+#!/usr/bin/env perl
+use warnings;
+use strict;
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+require "perl-net-scan.pm";
+require "perl-net-common.pm";
+
+my $SUDO = &get_sudo('/usr/bin/sudo');
+my $INTERFACE = 'wlan0';
+my $scan_command = "$SUDO iwlist $INTERFACE scanning";
+
+my $href = wireless_cell_hash( $INTERFACE, $scan_command );
+my %HoC = %{$href};
+
+foreach my $mac ( sort { $HoC{$b}{Quality} <=> $HoC{$a}{Quality} } keys %HoC ) {
+    print "$mac:";
+    foreach my $key ( keys %{$HoC{$mac}} ) {
+     	print " $HoC{$mac}{$key},";
+    }
+    print "\n";
+}
