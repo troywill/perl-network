@@ -25,16 +25,23 @@ bring_up_wireless_interface($WIRELESS_INTERFACE,$OPERSTATE_SYS_FILE);
 my $href = wireless_cell_hash( $WIRELESS_INTERFACE, $SCAN_COMMAND );
 my %HoC = %{$href};
 
+my $id = 0;
 print_available_cells();
+
 
 sub print_available_cells {
     foreach my $mac (keys %HoC) {
-	print "$mac\n";
+	my $security_type = $HoC{$mac}{security_type};
+	my $essid = $HoC{$mac}{essid};
+	if ($security_type eq 'OPEN' ) {
+	    print "$mac: $essid [$security_type]\n";
+	    $id++;
+	    push @open_networks, $HoC{$mac}{essid};
+	}
     }
 }
 
-exit;
-my %available_open_macs = &available_networks();
+# my %available_open_macs = &available_networks();
 
 print "Which open network do you want to connect to? ";
 chomp( my $choice = <STDIN> );

@@ -26,9 +26,9 @@ my %available_macs = %{$available_macs_ref};
 
 print_message_marv();
 connect_to_secure_network();
+search_for_open_networks();
 exit;
 exit if ( $carrier == 1 );
-search_for_open_networks();
 
 sub connect_to_network_by_mac {
 
