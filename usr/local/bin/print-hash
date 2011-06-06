@@ -6,17 +6,23 @@ use lib "$Bin/../lib";
 require "perl-net-scan.pm";
 require "perl-net-common.pm";
 
-my $SUDO = &get_sudo('/usr/bin/sudo');
-my $INTERFACE = 'wlan0';
+my $SUDO         = &get_sudo('/usr/bin/sudo');
+my $INTERFACE    = 'wlan0';
 my $scan_command = "$SUDO iwlist $INTERFACE scanning";
-
-my $href = wireless_cell_hash( $INTERFACE, $scan_command );
-my %HoC = %{$href};
-
-foreach my $mac ( sort { $HoC{$b}{quality} <=> $HoC{$a}{quality} } keys %HoC ) {
-    print "$mac:";
-    foreach my $key ( keys %{$HoC{$mac}} ) {
-     	print " $HoC{$mac}{$key},";
+my $href;
+my %HoC;
+my $clear = `clear`;
+while (1) {
+    $href = wireless_cell_hash($scan_command);
+    %HoC = %{$href};
+    print $clear;
+    foreach
+      my $mac ( sort { $HoC{$b}{quality} <=> $HoC{$a}{quality} } keys %HoC )
+    {
+        print "$mac:";
+        foreach my $key ( keys %{ $HoC{$mac} } ) {
+            print " $HoC{$mac}{$key},";
+        }
+        print "\n";
     }
-    print "\n";
 }

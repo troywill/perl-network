@@ -17,7 +17,7 @@ if ( $operstate eq 'down') {
 my $SCAN_COMMAND = "$SUDO iwlist $INTERFACE scanning";
 
 my ( %cell, %HoC, $mac, $security_type );
-my $href = wireless_cell_hash( $INTERFACE, $SCAN_COMMAND );
+my $href = wireless_cell_hash( $SCAN_COMMAND );
 %HoC = %{$href};
 &display_sort;
 sub display_sort {

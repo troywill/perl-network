@@ -1,6 +1,13 @@
+#===== SUBROUTINE ===========================================================
+# Name      : wireless_cell_hash()
+# Purpose   : run Jean_Tourrilhes' iwlist program and turn results into Perl hash
+# Parameters: $scan_command - typically '/usr/sbin/iwlist wlan0 scan'
+# Returns   : \%HoC - reference to a hash of wireless cell hashes
+# Comments  : The keys of %HOC are the wireless cell MAC addresses
+#============================================================================
 sub wireless_cell_hash {
-    my ( $interface, $scan_command ) = @_;
-    my $HoC_ref = scan_to_hash( $interface, $scan_command );
+    my $scan_command = shift;
+    my $HoC_ref = scan_to_hash( $scan_command );
     my %HoC = %{$HoC_ref};
     foreach my $mac ( keys %HoC ) {
         if ( $HoC{$mac}{encryption_state} eq 'on' ) {
@@ -19,8 +26,17 @@ sub wireless_cell_hash {
     return \%HoC;
 }
 
+
+#===== SUBROUTINE ===========================================================
+# Name      : process_options()
+# Purpose   : parse command line options and update the %Option hash
+# Parameters: none
+# Returns   : n/a
+# Throws    : a fatal error if a bad command line option is given
+# Comments  : checks @ARGV for valid package names
+#============================================================================
 sub scan_to_hash {
-    my ( $interface, $scan_command ) = @_;
+    my ( $scan_command ) = @_;
     my ( %cell, %HoC, $mac, $security_type );
     open( my $WIRELESS_SCAN, "$scan_command |" )
       or die "Tried, but unable to open $scan_command: $!";
@@ -32,6 +48,9 @@ m/^\s+Cell\s+\d+\s+-*\s*Address:\s*(([0-9a-fA-F]{2}[:-]{1}){5}([0-9a-fA-F]{2}))/
             $mac           = $1;
             %cell          = ( mac => $mac );
             $security_type = '';
+        }
+        elsif (m/^\s*Channel:(\d+)$/) {
+            $HoC{$mac}{channel} = $1;
         }
         elsif (m/^\s*ESSID:*\"(.*?)\"/) {
             $HoC{$mac}{essid} = $1;

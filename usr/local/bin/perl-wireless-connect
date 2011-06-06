@@ -21,7 +21,7 @@ my $carrier = get_carrier( $CARRIER_SYS_FILE );
 my %known_macs         = read_known_networks(WIRELESS_FILE);
 bring_up_wireless_interface($WIRELESS_INTERFACE, $OPERSTATE_SYS_FILE);
 wait_for_interface();
-my $available_macs_ref = wireless_cell_hash($WIRELESS_INTERFACE,$SCAN_COMMAND);
+my $available_macs_ref = wireless_cell_hash($SCAN_COMMAND);
 my %available_macs = %{$available_macs_ref};
 
 print_message_marv();
