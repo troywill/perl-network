@@ -14,6 +14,7 @@ my $SUDO_BINARY = '/usr/bin/sudo';
 my $WIRELESS_INTERFACE = 'wlan0';
 my $SUDO               = &get_sudo($SUDO_BINARY);
 my $SCAN_COMMAND       = "${SUDO} iwlist ${WIRELESS_INTERFACE} scanning";
+print "DEBUG0 $SCAN_COMMAND\n";
 my $VIDEO_COMMAND = 'mplayer -zoom -x 640 -y 480 /usr/local/share/mcdonalds.flv';
 my @open_networks;
 
@@ -22,7 +23,7 @@ use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 my $carrier = get_carrier( $CARRIER_SYS_FILE );
 bring_up_wireless_interface($WIRELESS_INTERFACE,$OPERSTATE_SYS_FILE);
 &wait_for_interface();
-my $href = wireless_cell_hash( $WIRELESS_INTERFACE, $SCAN_COMMAND );
+my $href = wireless_cell_hash( $SCAN_COMMAND );
 my %HoC = %{$href};
 
 my $id = 0;
