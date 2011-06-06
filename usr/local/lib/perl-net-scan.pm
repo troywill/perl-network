@@ -7,7 +7,6 @@
 #============================================================================
 sub wireless_cell_hash {
     my $scan_command = shift;
-    print "DEBUG1: $scan_command\n";
     my $HoC_ref = scan_to_hash( $scan_command );
     my %HoC = %{$HoC_ref};
     foreach my $mac ( keys %HoC ) {
@@ -39,7 +38,6 @@ sub wireless_cell_hash {
 sub scan_to_hash {
     my ( $scan_command ) = @_;
     my ( %cell, %HoC, $mac, $security_type );
-    print "DEBUG2: $scan_command\n";
     open( my $WIRELESS_SCAN, "$scan_command |" )
       or die "Tried, but unable to open $scan_command: $!";
     while (<$WIRELESS_SCAN>) {
