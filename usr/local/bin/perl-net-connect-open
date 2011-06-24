@@ -14,14 +14,15 @@ my $SUDO_BINARY = '/usr/bin/sudo';
 my $WIRELESS_INTERFACE = 'wlan0';
 my $SUDO               = &get_sudo($SUDO_BINARY);
 my $SCAN_COMMAND       = "${SUDO} iwlist ${WIRELESS_INTERFACE} scanning";
-print "DEBUG0 $SCAN_COMMAND\n";
 my $VIDEO_COMMAND = 'mplayer -zoom -x 640 -y 480 /usr/local/share/mcdonalds.flv';
 my @open_networks;
 
 use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 
 my $carrier = get_carrier( $CARRIER_SYS_FILE );
+print "FOO\n";
 bring_up_wireless_interface($WIRELESS_INTERFACE,$OPERSTATE_SYS_FILE);
+print "BAR\n";
 &wait_for_interface();
 my $href = wireless_cell_hash( $SCAN_COMMAND );
 my %HoC = %{$href};
@@ -29,23 +30,23 @@ my %HoC = %{$href};
 my $id = 0;
 print_available_cells();
 
-
 sub print_available_cells {
+    my $count = 1;
     foreach my $mac (keys %HoC) {
 	my $security_type = $HoC{$mac}{security_type};
 	my $essid = $HoC{$mac}{essid};
 	if ($security_type eq 'OPEN' ) {
-	    print "$mac: $essid [$security_type]\n";
+	    print "[$count] $mac: $essid [$security_type]\n";
 	    $id++;
 	    push @open_networks, $HoC{$mac}{essid};
+	    $count++;
 	}
     }
 }
 
-# my %available_open_macs = &available_networks();
-
 print "Which open network do you want to connect to? ";
 chomp( my $choice = <STDIN> );
+exit if ( $choice eq 'q' or $choice eq 'Q' or $choice eq '');
 $choice--;
 my $command = "sudo iwconfig wlan0 essid '$open_networks[$choice]'";
 print "==>$command\n";
@@ -168,6 +169,7 @@ sub connect_to_wep {
 }
 
 sub bring_up_wireless_interface {
+    exit;
     my $interface = shift;
     my $operstate = get_operstate( $OPERSTATE_SYS_FILE );
     if ( $operstate eq 'down' ) {
@@ -186,8 +188,6 @@ sub wait_for_interface {
 	print "---- operstate ne 'up' ------------------\n";
 	system("sudo ip link set wlan0 up 2>/dev/null");
 	( $operstate, $carrier ) = &get_interface_state;
-	print "-----------------------------------------\n";
-	print "\t==> [ $operstate, $carrier ]\n";
 	sleep 1;
     }
 }
@@ -195,7 +195,6 @@ sub wait_for_interface {
 sub get_interface_state {
     my $operstate = get_operstate( $OPERSTATE_SYS_FILE );
     my $carrier = get_carrier( $CARRIER_SYS_FILE );
-    print "operstate = $operstate, carrier = $carrier\n" if $VERBOSE;
     return ( $operstate, $carrier );
 }
 

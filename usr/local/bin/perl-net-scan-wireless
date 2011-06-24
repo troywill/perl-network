@@ -23,12 +23,12 @@ my $href = wireless_cell_hash( $SCAN_COMMAND );
 sub display_sort {
     my ( $mac, $strength, $essid, $security );
 format STDOUT_TOP =
-Hardware address  Strength Network name                       Security type
------------------ -------- ---------------------------------- -------------
+Hardware address  Strength Network name             Security type
+----------------- -------- ------------------------ -------------
 .
 
 format STDOUT =
-@<<<<<<<<<<<<<<<< @>>>>    @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<@<<<<<<<<<<<<<<<
+@<<<<<<<<<<<<<<<< @>>>>    @<<<<<<<<<<<<<<<<<<<<<<<<@<<<<<<<<<<<<<<<
 $mac,           $strength,  $essid, $security
 .
 
