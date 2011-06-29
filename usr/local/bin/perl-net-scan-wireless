@@ -6,15 +6,14 @@ use lib "$Bin/../lib/perl5/site_perl";
 require "perl-net-scan.pm";
 require "perl-net-common.pm";
 
-my $SUDO = &get_sudo('/usr/bin/sudo');
 my $INTERFACE = 'wlan0';
 
 chomp(my $operstate = `cat /sys/class/net/wlan0/operstate`);
 if ( $operstate eq 'down') {
-    system("$SUDO ip link set wlan0 up");
+    system("ip link set wlan0 up");
 }
 
-my $SCAN_COMMAND = "$SUDO iwlist $INTERFACE scanning";
+my $SCAN_COMMAND = "iwlist $INTERFACE scanning";
 
 my ( %cell, %HoC, $mac, $security_type );
 my $href = wireless_cell_hash( $SCAN_COMMAND );
