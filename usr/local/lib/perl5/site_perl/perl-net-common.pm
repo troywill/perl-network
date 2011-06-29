@@ -24,13 +24,4 @@ sub get_carrier {
     return $carrier;
 }
 
-sub get_sudo {
-    my $sudo_binary = shift;
-    my $sudo = '';
-    unless ( $ENV{USER} eq 'root' ) {
-	$sudo = $sudo_binary if ( -e $sudo_binary );
-    }
-    return $sudo;
-}
-
 1;
