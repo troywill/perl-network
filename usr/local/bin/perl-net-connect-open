@@ -10,19 +10,15 @@ my $VERBOSE         = 1;
 my $NUMBER_OF_SCANS = 2;
 my $CARRIER_SYS_FILE = '/sys/class/net/wlan0/carrier';
 my $OPERSTATE_SYS_FILE = '/sys/class/net/wlan0/operstate';
-my $SUDO_BINARY = '/usr/bin/sudo';
 my $WIRELESS_INTERFACE = 'wlan0';
-my $SUDO               = &get_sudo($SUDO_BINARY);
-my $SCAN_COMMAND       = "${SUDO} iwlist ${WIRELESS_INTERFACE} scanning";
+my $SCAN_COMMAND       = "iwlist ${WIRELESS_INTERFACE} scanning";
 my $VIDEO_COMMAND = 'mplayer -zoom -x 640 -y 480 /usr/local/share/mcdonalds.flv';
 my @open_networks;
 
 use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 
 my $carrier = get_carrier( $CARRIER_SYS_FILE );
-print "FOO\n";
 bring_up_wireless_interface($WIRELESS_INTERFACE,$OPERSTATE_SYS_FILE);
-print "BAR\n";
 &wait_for_interface();
 my $href = wireless_cell_hash( $SCAN_COMMAND );
 my %HoC = %{$href};
@@ -48,10 +44,10 @@ print "Which open network do you want to connect to? ";
 chomp( my $choice = <STDIN> );
 exit if ( $choice eq 'q' or $choice eq 'Q' or $choice eq '');
 $choice--;
-my $command = "sudo iwconfig wlan0 essid '$open_networks[$choice]'";
+my $command = "iwconfig wlan0 essid '$open_networks[$choice]'";
 print "==>$command\n";
 system($command);
-$command = "sudo dhcpcd wlan0";
+$command = "dhcpcd wlan0";
 print "==>$command\n";
 system($command);
 
@@ -120,11 +116,11 @@ sub connect_to_open_network {
     my $essid = shift;
     &wait_for_interface();
     print "==> Connecting to open network [$essid]\n";
-    system("$SUDO /usr/sbin/iwconfig wlan0 essid $essid");
+    system("/usr/sbin/iwconfig wlan0 essid $essid");
     sleep 1;
-    system("$SUDO /usr/sbin/iwconfig wlan0 essid $essid");
+    system("/usr/sbin/iwconfig wlan0 essid $essid");
     print "DEBUG: check ESSID after doing iwconfig wlan0 essid $essid ...\n"; 
-    system("$SUDO iwconfig wlan0 | grep ESSID");
+    system("iwconfig wlan0 | grep ESSID");
     &run_dhcpcd( $WIRELESS_INTERFACE );
     &run_video($VIDEO_COMMAND);
     exit;
@@ -132,7 +128,7 @@ sub connect_to_open_network {
 
 sub run_dhcpcd {
     my $interface = shift;
-    my $command = "${SUDO} dhcpcd --rebind ${interface} 2>&1";
+    my $command = "dhcpcd --rebind ${interface} 2>&1";
     print "==> $command\n";
     open (my $dhcpcd,"$command |") or die "Not able to open dhcpcd";
     my $line1 = <$dhcpcd>;
@@ -163,7 +159,7 @@ sub connect_to_network_by_mac {
 sub connect_to_wep {
     my ( $key, $essid ) = @_;
     print "==> [$key][$essid]\n";
-    system("$SUDO /usr/sbin/iwconfig wlan0 key $key essid $essid");
+    system("/usr/sbin/iwconfig wlan0 key $key essid $essid");
     sleep 1;
     &run_dhcpcd( $WIRELESS_INTERFACE );
 }
@@ -173,7 +169,7 @@ sub bring_up_wireless_interface {
     my $interface = shift;
     my $operstate = get_operstate( $OPERSTATE_SYS_FILE );
     if ( $operstate eq 'down' ) {
-        system("$SUDO ip link set wlan0 up");
+        system("ip link set wlan0 up");
     }
 }
 
@@ -181,12 +177,12 @@ sub wait_for_interface {
     my ( $operstate, $carrier ) = &get_interface_state;
     while (($carrier != 1) && ($carrier!=0)) {
 	print "--------------------- carrier != 1 or 0 ------------------\n";
-	system("sudo ip link set wlan0 up 2>/dev/null");
+	system("ip link set wlan0 up 2>/dev/null");
 	( $operstate, $carrier ) = &get_interface_state;
     }
     while (( $operstate ne 'up') && ( $operstate ne 'down')) {
 	print "---- operstate ne 'up' ------------------\n";
-	system("sudo ip link set wlan0 up 2>/dev/null");
+	system("ip link set wlan0 up 2>/dev/null");
 	( $operstate, $carrier ) = &get_interface_state;
 	sleep 1;
     }
