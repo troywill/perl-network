@@ -2,13 +2,12 @@
 use warnings;
 use strict;
 use FindBin qw($Bin);
-use lib "$Bin/../lib";
+use lib "$Bin/../lib/perl5/site_perl";
 require "perl-net-scan.pm";
 require "perl-net-common.pm";
 
-my $SUDO         = &get_sudo('/usr/bin/sudo');
 my $INTERFACE    = 'wlan0';
-my $scan_command = "$SUDO iwlist $INTERFACE scanning";
+my $scan_command = "iwlist $INTERFACE scanning";
 my $href;
 my %HoC;
 my $clear = `clear`;
