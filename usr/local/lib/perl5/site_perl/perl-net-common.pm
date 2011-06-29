@@ -10,7 +10,7 @@ sub bring_up_wireless_interface {
     my ( $interface, $operstate_sys_file ) = @_;
     my $operstate = get_operstate( $operstate_sys_file );
     if ( $operstate eq 'down' ) {
-        system("$SUDO ip link set wlan0 up");
+        system("ip link set wlan0 up");
     }
 }
 
