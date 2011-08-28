@@ -10,6 +10,7 @@ use constant PORT => 12000;
 use constant PID_FILE => '/tmp/perl-daemon.pid';
 my $LOGFILE = '/var/local/log/perl-daemon.log.' . time;
 my $quit = 0;
+my $sleep = 10;
 
 my $fh = open_pid_file(PID_FILE);
 
@@ -45,7 +46,7 @@ while (!$quit) {
 	select( $oldh );
 	system("perl-wireless-connect");
     }
-    sleep 1;
+    sleep $sleep;
   # next unless my $connection = $listen_socket->accept;
   
   # die "Not able to fork: $!" unless defined (my $child = fork());
