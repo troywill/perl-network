@@ -44,7 +44,7 @@ while (!$quit) {
 	my $oldh = select( $log_file );
 	$| = 1;
 	select( $oldh );
-	system("perl-wireless-connect");
+	system("wireless-connect.pl");
     }
     sleep $sleep;
   # next unless my $connection = $listen_socket->accept;
