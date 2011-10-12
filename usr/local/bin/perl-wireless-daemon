@@ -11,6 +11,7 @@ use constant PID_FILE => '/tmp/perl-daemon.pid';
 my $LOGFILE = '/var/local/log/perl-daemon.log.' . time;
 my $quit = 0;
 my $sleep = 10;
+my $carrier = 0;
 
 my $fh = open_pid_file(PID_FILE);
 
@@ -28,19 +29,21 @@ my $listen_socket = IO::Socket::INET->new(LocalPort => shift || PORT,
 die "Not able to create a listening socket: $@" unless $listen_socket;
 
 warn "$0 starting...\n";
+print "HERE";
 my $pid = become_daemon();
 print $fh $pid;
 close $fh;
 
 open ( my $log_file, '>', $LOGFILE) || die;
-open ( my $essid_file, '<', '/tmp/essid') || die;
-chomp(my $essid = <$essid_file>);
-close $essid_file;
+# open ( my $essid_file, '<', '/tmp/essid') || die;
+# chomp(my $essid = <$essid_file>);
+# close $essid_file;
 while (!$quit) {
     chomp(my $carrier = `cat /sys/class/net/wlan0/carrier`);
-    if ( $carrier == 0 ) {
+    print $log_file "carrier ==> [$carrier]\n";
+    unless ( $carrier == 1 ) {
 	chomp( my $date = `date` );
-	print $log_file "[$essid][$date]\n";
+#	print $log_file "[$essid][$date]\n";
 	my $oldh = select( $log_file );
 	$| = 1;
 	select( $oldh );
