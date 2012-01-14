@@ -8,7 +8,7 @@ use POSIX qw(WNOHANG setsid);
 
 use constant PORT => 12000;
 use constant PID_FILE => '/tmp/perl-daemon.pid';
-my $LOGFILE = '/var/local/log/perl-daemon.log.' . time;
+my $LOGFILE = '/var/log/perl-wireless';
 my $quit = 0;
 my $sleep = 10;
 my $carrier = 0;
@@ -34,7 +34,7 @@ my $pid = become_daemon();
 print $fh $pid;
 close $fh;
 
-open ( my $log_file, '>', $LOGFILE) || die;
+open ( my $log_file, '>', $LOGFILE) || die "unable to open $LOGFILE";
 # open ( my $essid_file, '<', '/tmp/essid') || die;
 # chomp(my $essid = <$essid_file>);
 # close $essid_file;
