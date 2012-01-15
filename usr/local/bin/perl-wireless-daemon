@@ -33,14 +33,12 @@ open( my $log_file, '>', $LOGFILE ) || die "unable to open $LOGFILE";
 # close $essid_file;
 while ( !$quit ) {
     chomp( my $carrier = `cat /sys/class/net/wlan0/carrier` );
-    print $log_file "carrier ==> [$carrier]\n";
     unless ( $carrier == 1 ) {
         chomp( my $date = `date` );
-
-        #	print $log_file "[$essid][$date]\n";
         my $oldh = select($log_file);
         $| = 1;
         select($oldh);
+	print $log_file, `date`;
         print $log_file "=> /usr/local/bin/wireless-connect.pl\n";
         system("/usr/local/bin/wireless-connect.pl");
     }
