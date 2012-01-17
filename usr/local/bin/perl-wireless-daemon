@@ -38,8 +38,8 @@ while ( !$quit ) {
         my $oldh = select($log_file);
         $| = 1;
         select($oldh);
-	print $log_file, `date`;
-        print $log_file "=> /usr/local/bin/wireless-connect.pl\n";
+	print $log_file `date`;
+        print $log_file "execute /usr/local/bin/wireless-connect.pl\n";
         system("/usr/local/bin/wireless-connect.pl");
     }
     sleep $sleep;
