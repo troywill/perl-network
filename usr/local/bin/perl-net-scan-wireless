@@ -7,10 +7,13 @@ require "perl-net-scan.pm";
 require "perl-net-common.pm";
 
 my $INTERFACE = 'wlan0';
+$INTERFACE = 'wlp2s0';
 
-chomp(my $operstate = `cat /sys/class/net/wlan0/operstate`);
+chomp(my $operstate = `cat /sys/class/net/$INTERFACE/operstate`);
+
+
 if ( $operstate eq 'down') {
-    system("ip link set wlan0 up");
+    system("ip link set $INTERFACE up");
 }
 
 my $SCAN_COMMAND = "iwlist $INTERFACE scanning";

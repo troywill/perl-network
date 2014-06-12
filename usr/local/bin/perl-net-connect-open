@@ -8,17 +8,23 @@ require "perl-net-common.pm";
 
 my $VERBOSE         = 1;
 my $NUMBER_OF_SCANS = 2;
-my $CARRIER_SYS_FILE = '/sys/class/net/wlan0/carrier';
-my $OPERSTATE_SYS_FILE = '/sys/class/net/wlan0/operstate';
-my $WIRELESS_INTERFACE = 'wlan0';
+my $WIRELESS_INTERFACE = 'wlp2s0';
+my $CARRIER_SYS_FILE = "/sys/class/net/${WIRELESS_INTERFACE}/carrier";
+my $OPERSTATE_SYS_FILE = "/sys/class/net/${WIRELESS_INTERFACE}/operstate";
+
 my $SCAN_COMMAND       = "iwlist ${WIRELESS_INTERFACE} scanning";
 my $VIDEO_COMMAND = 'mplayer -zoom -x 640 -y 480 /usr/local/share/mcdonalds.flv';
+
+my $IWCONFIG="/usr/bin/iwconfig";
+
 my @open_networks;
 
 use constant WIRELESS_FILE => '/usr/local/etc/wireless/00';
 
 my $carrier = get_carrier( $CARRIER_SYS_FILE );
+
 bring_up_wireless_interface($WIRELESS_INTERFACE,$OPERSTATE_SYS_FILE);
+
 &wait_for_interface();
 my $href = wireless_cell_hash( $SCAN_COMMAND );
 my %HoC = %{$href};
@@ -44,10 +50,10 @@ print "Which open network do you want to connect to? ";
 chomp( my $choice = <STDIN> );
 exit if ( $choice eq 'q' or $choice eq 'Q' or $choice eq '');
 $choice--;
-my $command = "iwconfig wlan0 essid '$open_networks[$choice]'";
+my $command = "$IWCONFIG $WIRELESS_INTERFACE essid '$open_networks[$choice]'";
 print "==>$command\n";
 system($command);
-$command = "dhcpcd wlan0";
+$command = "dhcpcd $WIRELESS_INTERFACE";
 print "==>$command\n";
 system($command);
 
@@ -116,11 +122,11 @@ sub connect_to_open_network {
     my $essid = shift;
     &wait_for_interface();
     print "==> Connecting to open network [$essid]\n";
-    system("/usr/sbin/iwconfig wlan0 essid $essid");
+    system("$IWCONFIG ${WIRELESS_INTERFACE} essid $essid");
     sleep 1;
-    system("/usr/sbin/iwconfig wlan0 essid $essid");
-    print "DEBUG: check ESSID after doing iwconfig wlan0 essid $essid ...\n"; 
-    system("iwconfig wlan0 | grep ESSID");
+    system("$IWCONFIG ${WIRELESS_INTERFACE} essid $essid");
+    print "DEBUG: check ESSID after doing iwconfig ${WIRELESS_INTERFACE} essid $essid ...\n"; 
+    system("$IWCONFIG ${WIRELESS_INTERFACE} | grep ESSID");
     &run_dhcpcd( $WIRELESS_INTERFACE );
     &run_video($VIDEO_COMMAND);
     exit;
@@ -159,7 +165,7 @@ sub connect_to_network_by_mac {
 sub connect_to_wep {
     my ( $key, $essid ) = @_;
     print "==> [$key][$essid]\n";
-    system("/usr/sbin/iwconfig wlan0 key $key essid $essid");
+    system("$IWCONFIG ${WIRELESS_INTERFACE} key $key essid $essid");
     sleep 1;
     &run_dhcpcd( $WIRELESS_INTERFACE );
 }
@@ -169,7 +175,7 @@ sub bring_up_wireless_interface {
     my $interface = shift;
     my $operstate = get_operstate( $OPERSTATE_SYS_FILE );
     if ( $operstate eq 'down' ) {
-        system("ip link set wlan0 up");
+        system("ip link set ${WIRELESS_INTERFACE} up");
     }
 }
 
@@ -177,12 +183,12 @@ sub wait_for_interface {
     my ( $operstate, $carrier ) = &get_interface_state;
     while (($carrier != 1) && ($carrier!=0)) {
 	print "--------------------- carrier != 1 or 0 ------------------\n";
-	system("ip link set wlan0 up 2>/dev/null");
+	system("ip link set ${WIRELESS_INTERFACE} up 2>/dev/null");
 	( $operstate, $carrier ) = &get_interface_state;
     }
     while (( $operstate ne 'up') && ( $operstate ne 'down')) {
 	print "---- operstate ne 'up' ------------------\n";
-	system("ip link set wlan0 up 2>/dev/null");
+	system("ip link set ${WIRELESS_INTERFACE} up 2>/dev/null");
 	( $operstate, $carrier ) = &get_interface_state;
 	sleep 1;
     }
@@ -215,3 +221,4 @@ sub get_operstate {
     close $fh;
     return $operstate;
 }
+
