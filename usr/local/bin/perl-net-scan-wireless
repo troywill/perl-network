@@ -7,7 +7,7 @@ require "perl-net-scan.pm";
 require "perl-net-common.pm";
 
 my $INTERFACE = 'wlan0';
-$INTERFACE = 'wlp2s0';
+$INTERFACE = find_wireless_device();
 
 chomp(my $operstate = `cat /sys/class/net/$INTERFACE/operstate`);
 

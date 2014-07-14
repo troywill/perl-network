@@ -24,4 +24,17 @@ sub get_carrier {
     return $carrier;
 }
 
+sub find_wireless_device {
+    my $wireless_device = "";
+    my @devices = </sys/class/net/*>;
+    foreach my $device ( @devices ) {
+        if ( $device =~ /\/sys\/class\/net\/(w.*?)$/ ) {
+            $wireless_device = $1;
+            print $1, "\n";
+        }
+    }
+    return $wireless_device;
+}
+
+
 1;
