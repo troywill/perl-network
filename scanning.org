@@ -1,0 +1,229 @@
+* Cell 01 Encryption key:on
+                    IE: Unknown: 0000
+                    IE: Unknown: 01088B960C1218243048
+                    IE: Unknown: 030101
+                    IE: Unknown: 050400010000
+                    IE: Unknown: 070655534F010D1E
+                    IE: Unknown: 200100
+                    IE: Unknown: 2A0100
+                    IE: Unknown: 3202606C
+                    IE: Unknown: 2D1AAD0103FFE0E000000000000000000000000000000406E6E70D00
+                    IE: Unknown: 3D1601001500000000000000000000000000000000000000
+                    IE: Unknown: 4A0E14000A002C01C800140005001900
+                    IE: Unknown: 7F0101
+                    IE: WPA Version 1
+                        Group Cipher : CCMP
+                        Pairwise Ciphers (1) : CCMP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: DD180050F2020101030003A4000027A4000042435E0062322F00
+                    IE: Unknown: DD0900037F01010000FF7F
+* Cell 02 Encryption key:on
+                    IE: Unknown: 0010526F736577696C6C5F47617465776179
+                    IE: Unknown: 010882848B9624B0486C
+                    IE: Unknown: 030101
+                    IE: Unknown: 2A0100
+                    IE: Unknown: 2F0100
+                    IE: IEEE 802.11i/WPA2 Version 1
+                        Group Cipher : CCMP
+                        Pairwise Ciphers (1) : CCMP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: 32048C129860
+                    IE: Unknown: DD090010180207F0000000
+                    IE: Unknown: DD180050F2020101800003A4000027A4000042435E0062322F00
+* Cell 03 Encryption key:off
+* Cell 04 Encryption key:on
+                    IE: Unknown: 00096F6C69766572615F6E
+                    IE: Unknown: 010882848B0C12961824
+                    IE: Unknown: 030102
+                    IE: Unknown: 0706555349010B1B
+                    IE: Unknown: 200100
+                    IE: Unknown: 2A0100
+                    IE: Unknown: 32043048606C
+                    IE: Unknown: DD180050F2020101020003A4000027A4000042435E0062322F00
+                    IE: Unknown: DD1E00904C334C101BFFFF000000000000000000000000000000000000000000
+                    IE: Unknown: 2D1A4C101BFFFF000000000000000000000000000000000000000000
+                    IE: Unknown: DD1A00904C3402001B00000000000000000000000000000000000000
+                    IE: Unknown: 3D1602001B00000000000000000000000000000000000000
+                    IE: Unknown: DD0900037F01010000FF7F
+                    IE: Unknown: DD0A00037F04010000000000
+* Cell 05 Encryption key:on
+                    IE: Unknown: 00076F6C6976657261
+                    IE: Unknown: 010882848B962430486C
+                    IE: Unknown: 030101
+                    IE: Unknown: 2A0100
+                    IE: Unknown: 2F0100
+                    IE: Unknown: 32040C121860
+                    IE: Unknown: DD06001018010201
+                    IE: WPA Version 1
+                        Group Cipher : TKIP
+                        Pairwise Ciphers (1) : TKIP
+                        Authentication Suites (1) : PSK
+* Cell 06 Encryption key:on
+                    IE: Unknown: 000533394A4350
+                    IE: Unknown: 010882848B962430486C
+                    IE: Unknown: 030106
+                    IE: Unknown: 2A0100
+                    IE: Unknown: 2F0100
+                    IE: IEEE 802.11i/WPA2 Version 1
+                        Group Cipher : TKIP
+                        Pairwise Ciphers (2) : CCMP TKIP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: 32040C121860
+                    IE: Unknown: 2D1AFC181BFFFF000000000000000000000000000000000000000000
+                    IE: Unknown: 3D1606001500000000000000000000000000000000000000
+                    IE: Unknown: 4A0E14000A002C01C800140005001900
+                    IE: Unknown: 7F0101
+                    IE: Unknown: DD090010180204F0040000
+                    IE: Unknown: DD180050F2020101800003A4000027A4000042435E0062322F00
+* Cell 07 Encryption key:off
+                    IE: Unknown: 00055345545550
+                    IE: Unknown: 010482848B96
+                    IE: Unknown: 03010B
+                    IE: Unknown: 06020000
+                    IE: Unknown: 2A0100
+                    IE: Unknown: 2F0100
+                    IE: Unknown: 2D1A2C11190000000000000000000000000000000000000000000000
+                    IE: Unknown: 3D160B080000000000000000000000000000000000000000
+                    IE: Unknown: DD09001018020000040000
+                    IE: Unknown: DD070050F202000100
+* Cell 08 Encryption key:on
+                    IE: Unknown: 0009544731363732473432
+                    IE: Unknown: 010882848B961224486C
+                    IE: Unknown: 030101
+                    IE: Unknown: 32040C183060
+                    IE: Unknown: 0706555320010B1E
+                    IE: Unknown: 33082001020304050607
+                    IE: Unknown: 33082105060708090A0B
+                    IE: Unknown: 050400010010
+                    IE: Unknown: DD310050F204104A000110104400010210470010327FD2001DD211B286015753435F5555103C0001011049000600372A000120
+                    IE: Unknown: 2A0100
+                    IE: Unknown: 2D1AEE1117FFFFFF0001000000000000000000000000001846471100
+                    IE: Unknown: 3D1601000700000000000000000000000000000000000000
+                    IE: Unknown: 4A0E14000A002C01C800140005001900
+                    IE: Unknown: 7F0101
+                    IE: IEEE 802.11i/WPA2 Version 1
+                        Group Cipher : CCMP
+                        Pairwise Ciphers (1) : CCMP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: DD180050F2020101800003A4000027A4000042435E0062322F00
+                    IE: Unknown: 0B05010011127A
+                    IE: Unknown: DD07000C4303000000
+* Cell 09 Encryption key:off
+                    IE: Unknown: 00094361626C6557694669
+                    IE: Unknown: 01088B960C1218243048
+                    IE: Unknown: 030101
+                    IE: Unknown: 050400010000
+                    IE: Unknown: 070655534F010D1E
+                    IE: Unknown: 200100
+                    IE: Unknown: 2A0100
+                    IE: Unknown: 3202606C
+                    IE: Unknown: 2D1AAD0103FFE0E000000000000000000000000000000406E6E70D00
+                    IE: Unknown: 3D1601001500000000000000000000000000000000000000
+                    IE: Unknown: 4A0E14000A002C01C800140005001900
+                    IE: Unknown: 7F0101
+                    IE: Unknown: DD180050F2020101050003A4000027A4000042435E0062322F00
+                    IE: Unknown: DD0900037F01010000FF7F
+* Cell 10 Encryption key:on
+                    IE: Unknown: 0007486F4A6F203033
+                    IE: Unknown: 010882848B962430486C
+                    IE: Unknown: 03010B
+                    IE: Unknown: 2A0106
+                    IE: Unknown: 2F0106
+                    IE: IEEE 802.11i/WPA2 Version 1
+                        Group Cipher : CCMP
+                        Pairwise Ciphers (1) : CCMP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: 32040C121860
+                    IE: Unknown: 2D1AEC181BFFFF000000000000000000000000000000000000000000
+                    IE: Unknown: 3D160B080400000000000000000000000000000000000000
+                    IE: Unknown: DD090010180205100C0000
+                    IE: Unknown: DD180050F2020101000003A4000027A4000042435E0062322F00
+                    IE: Unknown: DDA70050F204104A0001101044000102103B0001031047001000000000000000010003EC1A598AF23D1021001242656C6B696E20436F72706F726174696F6E1023000946394B31303032763510240007352E30302E30371042000E31323331304743323530373137381054000800060050F20400011011001B42656C6B696E20576972656C65737320526F75746572285746412910080002200C103C0001011049000600372A000120
+* Cell 11 Encryption key:on
+                    IE: Unknown: 000A62656C6B696E2E363761
+                    IE: Unknown: 010882848B960C121824
+                    IE: Unknown: 030101
+                    IE: Unknown: 050400010010
+                    IE: Unknown: 2A0104
+                    IE: Unknown: 32043048606C
+                    IE: Unknown: 2D1A6E181EFF00000000000000000000000000000000000000000000
+                    IE: Unknown: 3D1601050000000000000000000000000000000000000000
+                    IE: WPA Version 1
+                        Group Cipher : CCMP
+                        Pairwise Ciphers (1) : CCMP
+                        Authentication Suites (1) : PSK
+                    IE: IEEE 802.11i/WPA2 Version 1
+                        Group Cipher : CCMP
+                        Pairwise Ciphers (1) : CCMP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: DD180050F2020101000003A4000027A4000042435E0062322F00
+                    IE: Unknown: DD1E00904C336E181EFF00000000000000000000000000000000000000000000
+                    IE: Unknown: DD1A00904C3401050000000000000000000000000000000000000000
+                    IE: Unknown: DD0600E04C020160
+                    IE: Unknown: DD0E0050F204104A0001101044000102
+* Cell 12 Encryption key:on
+                    IE: Unknown: 00096F63746176696F3736
+                    IE: Unknown: 010882848B962430486C
+                    IE: Unknown: 030106
+                    IE: Unknown: 050400010000
+                    IE: Unknown: 2A0104
+                    IE: Unknown: 2F0104
+                    IE: Unknown: 32040C121860
+                    IE: Unknown: DD090010180208F02C0000
+                    IE: Unknown: DD180050F2020101800003A4000027A4000042435E0062322F00
+* Cell 13 Encryption key:on
+                    IE: Unknown: 00084C41205041524544
+                    IE: Unknown: 01088C129824B048606C
+                    IE: Unknown: 03019D
+                    IE: Unknown: 070655532024081E
+                    IE: Unknown: 050400010004
+                    IE: Unknown: 2D1AEE0117FFFFFF0001000000000000000000000000001846471100
+                    IE: Unknown: 3D169D050400000000000000000000000000000000000000
+                    IE: WPA Version 1
+                        Group Cipher : TKIP
+                        Pairwise Ciphers (2) : TKIP CCMP
+                        Authentication Suites (1) : PSK
+                    IE: IEEE 802.11i/WPA2 Version 1
+                        Group Cipher : TKIP
+                        Pairwise Ciphers (2) : TKIP CCMP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: DD180050F2020101800003A4000027A4000042435E0062322F00
+                    IE: Unknown: 0B05010001127A
+                    IE: Unknown: DD07000C4303000000
+* Cell 14 Encryption key:on
+                    IE: Unknown: 00076A7368656E646F
+                    IE: Unknown: 010882848B962430486C
+                    IE: Unknown: 030106
+                    IE: Unknown: 050400010000
+                    IE: Unknown: 2A0100
+                    IE: Unknown: 2F0100
+                    IE: IEEE 802.11i/WPA2 Version 1
+                        Group Cipher : TKIP
+                        Pairwise Ciphers (2) : CCMP TKIP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: 32040C121860
+                    IE: Unknown: 2D1AFC181BFFFF000000000000000000000000000000000000000000
+                    IE: Unknown: 3D1606001500000000000000000000000000000000000000
+                    IE: Unknown: 4A0E14000A002C01C800140005001900
+                    IE: Unknown: 7F0101
+                    IE: Unknown: DD090010180201F0040000
+                    IE: WPA Version 1
+                        Group Cipher : TKIP
+                        Pairwise Ciphers (2) : CCMP TKIP
+                        Authentication Suites (1) : PSK
+                    IE: Unknown: DD180050F2020101800003A4000027A4000042435E0062322F00
+* Cell 15 Encryption key:on
+                    IE: Unknown: 00054C54303232
+                    IE: Unknown: 010882848B960C121824
+                    IE: Unknown: 030106
+                    IE: Unknown: 050400010000
+                    IE: Unknown: 200100
+                    IE: Unknown: 2A0100
+                    IE: Unknown: 32043048606C
+                    IE: Unknown: DD180050F2020101030003A4000027A4000042435E0062322F00
+                    IE: Unknown: 2D1A8C131BFF00000000000000000000000000000000000000000000
+                    IE: Unknown: 3D1606001B00000000000000000000000000000000000000
+                    IE: Unknown: DD0900037F01010000FF7F
+                    IE: Unknown: DD0A00037F04010020000000
+                    IE: Unknown: 0706555320010B1B
+
